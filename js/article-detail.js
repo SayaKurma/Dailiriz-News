@@ -2,6 +2,9 @@ import { db, formatDateID } from './firebase-config.js';
 import { doc, getDoc, collection, query, where, getDocs, limit, addDoc, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
 let currentArticle = null;
+const BRAND_NAME = "Dailiriz";
+const DEFAULT_IMAGE = "https://via.placeholder.com/800x450?text=No+Image+Available";
+const FALLBACK_IMAGE = "https://via.placeholder.com/800x450?text=Image+Not+Found";
 
 function showToast(message, type = 'success') {
   const toast = document.getElementById('toast');
@@ -13,7 +16,7 @@ function showToast(message, type = 'success') {
 }
 
 function updateMetaTags(article) {
-  const desc = article.description || article.content?.substring(0, 150) || '';
+  const desc = article.description || article.content?.substring(0, 150).replace(/<[^>]*>/g, '') || '';
   const metaDesc = document.getElementById('meta-description');
   const ogTitle = document.getElementById('og-title');
   const ogDesc = document.getElementById('og-description');
@@ -22,17 +25,37 @@ function updateMetaTags(article) {
   if (metaDesc) metaDesc.content = desc;
   if (ogTitle) ogTitle.content = article.title;
   if (ogDesc) ogDesc.content = desc;
-  if (ogImage) ogImage.content = article.image || '';
+  if (ogImage) {
+    ogImage.content = article.image?.trim() || `https://dailiriz.vercel.app/default-og.png`;
+  }
   if (ogUrl) ogUrl.content = window.location.href;
+  const publishDate = article.createdAt?.toDate?.() || new Date(article.createdAt) || new Date();
   const schema = {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
     "headline": article.title,
     "description": desc,
-    "image": article.image,
-    "datePublished": article.createdAt?.toDate?.().toISOString() || new Date().toISOString(),
-    "author": { "@type": "Person", "name": article.author || "Redaksi Dailiriz" },
-    "publisher": { "@type": "Organization", "name": "Dailiriz", "logo": { "@type": "ImageObject", "url": "https://dailiriz.vercel.app/logo.png" } }
+    "image": article.image || `https://dailiriz.vercel.app/default-og.png`,
+    "datePublished": publishDate.toISOString(),
+    "dateModified": article.updatedAt?.toDate?.()?.toISOString() || publishDate.toISOString(),
+    "author": { 
+      "@type": "Person", 
+      "name": article.author || `Redaksi ${BRAND_NAME}` 
+    },
+    "publisher": { 
+      "@type": "Organization", 
+      "name": BRAND_NAME,
+      "logo": { 
+        "@type": "ImageObject", 
+        "url": "https://dailiriz.vercel.app/logo.png",
+        "width": 600,
+        "height": 60
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": window.location.href
+    }
   };
   const schemaEl = document.getElementById('article-schema');
   if (schemaEl) schemaEl.textContent = JSON.stringify(schema);
@@ -56,19 +79,39 @@ async function loadArticle() {
     const titleEl = document.getElementById('article-title');
     const authorEl = document.getElementById('article-author');
     const dateEl = document.getElementById('article-date');
-    const imageEl = document.getElementById('article-image');
     if (categoryEl) categoryEl.textContent = currentArticle.category || 'Berita';
     if (badgeEl) badgeEl.textContent = currentArticle.category || 'Berita';
     if (titleEl) titleEl.textContent = currentArticle.title;
     if (authorEl) authorEl.textContent = currentArticle.author || 'Redaksi Dailiriz';
     if (dateEl) dateEl.textContent = formatDateID(currentArticle.createdAt);
-    // Tampilkan caption gambar
-const captionEl = document.getElementById('image-caption');
-if (captionEl && currentArticle.imageCaption) {
-  captionEl.textContent = currentArticle.imageCaption;
-} else if (captionEl) {
-  captionEl.textContent = '';
-}
+    const imageEl = document.getElementById('article-image');
+    const captionEl = document.getElementById('image-caption');
+    const sourceEl = document.getElementById('image-source-dynamic');
+    if (imageEl) {
+      const imageSrc = currentArticle.image?.trim() || DEFAULT_IMAGE;
+      imageEl.src = imageSrc;
+      imageEl.alt = currentArticle.title ? `Ilustrasi: ${currentArticle.title}` : 'Thumbnail Artikel';
+      imageEl.onerror = function() {
+        console.warn('Gambar tidak ditemukan, menggunakan fallback:', imageSrc);
+        this.src = FALLBACK_IMAGE;
+        this.onerror = null;
+        if (captionEl && !currentArticle.imageCaption) {
+          captionEl.textContent = 'Gambar tidak tersedia';
+          captionEl.classList.add('text-red-400');
+        }
+      };
+      imageEl.onload = function() {
+        console.log('Gambar berhasil dimuat:', imageSrc);
+      };
+    }
+    if (captionEl) {
+      captionEl.textContent = currentArticle.imageCaption || '';
+      captionEl.classList.toggle('hidden', !currentArticle.imageCaption);
+    }
+    if (sourceEl) {
+      const imageSource = currentArticle.imageSource || currentArticle.author || BRAND_NAME;
+      sourceEl.textContent = imageSource;
+    }
     const contentEl = document.getElementById('article-content');
     if (contentEl && currentArticle.content) {
       const paragraphs = currentArticle.content.split('\n\n').filter(p => p.trim());
@@ -96,7 +139,7 @@ async function loadRelatedArticles(category, currentId) {
       const article = { id: docSnap.id, ...docSnap.data() };
       const card = document.createElement('article');
       card.className = 'bg-white rounded-lg shadow-sm hover:shadow-lg transition duration-300 overflow-hidden group cursor-pointer';
-      card.innerHTML = `<div class="h-40 md:h-48 overflow-hidden"><img src="${article.image || 'https://via.placeholder.com/400x200'}" class="w-full h-full object-cover transform group-hover:scale-110 transition duration-500" alt="${article.title}"></div><div class="p-3 md:p-4"><span class="text-xs font-bold text-red-600 uppercase">${article.category}</span><h4 class="font-serif font-bold text-base md:text-lg mt-1 md:mt-2 mb-1 md:mb-2 leading-snug group-hover:text-red-700 line-clamp-2">${article.title}</h4><p class="text-slate-600 text-xs md:text-sm line-clamp-2 md:line-clamp-3">${article.description || ''}</p></div>`;
+      card.innerHTML = `<div class="h-40 md:h-48 overflow-hidden"><img src="${article.image || DEFAULT_IMAGE}" class="w-full h-full object-cover transform group-hover:scale-110 transition duration-500" alt="${article.title}" loading="lazy"></div><div class="p-3 md:p-4"><span class="text-xs font-bold text-red-600 uppercase">${article.category}</span><h4 class="font-serif font-bold text-base md:text-lg mt-1 md:mt-2 mb-1 md:mb-2 leading-snug group-hover:text-red-700 line-clamp-2">${article.title}</h4><p class="text-slate-600 text-xs md:text-sm line-clamp-2 md:line-clamp-3">${article.description || ''}</p></div>`;
       card.addEventListener('click', () => { window.location.href = `article.html?id=${article.id}`; });
       container.appendChild(card);
       count++;
@@ -137,21 +180,31 @@ async function submitComment() {
   const input = document.getElementById('comment-input');
   const nameInput = document.getElementById('comment-name');
   const content = input?.value.trim();
-  if (!content) { showToast('Tulis komentar terlebih dahulu', 'error'); return; }
+  if (!content) { 
+    showToast('Tulis komentar terlebih dahulu', 'error'); 
+    input?.focus();
+    return; 
+  }
+  const nameValue = nameInput?.value.trim();
+  if (nameValue && nameValue.length < 2) {
+    showToast('Nama minimal 2 karakter', 'error');
+    nameInput?.focus();
+    return;
+  }
   try {
     await addDoc(collection(db, "comments"), {
       articleId: articleId,
-      name: nameInput?.value.trim() || 'Pembaca Anonim',
+      name: nameValue || 'Pembaca Anonim',
       content: content,
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
+      status: 'published'
     });
     if (input) input.value = '';
-    if (nameInput && nameInput.value.trim() === '') nameInput.value = '';
     showToast('Komentar berhasil dikirim!');
     await loadComments(articleId);
   } catch (error) {
     console.error('Error submitting comment:', error);
-    showToast('Gagal mengirim komentar', 'error');
+    showToast('Gagal mengirim komentar. Coba lagi.', 'error');
   }
 }
 
