@@ -216,7 +216,7 @@ async function renderHomePage(container) {
       <div class="relative z-10 max-w-3xl mx-auto">
         <h3 class="font-serif text-2xl md:text-3xl italic text-slate-800 mb-6">"Setiap berita yang Anda baca di sini adalah janji kami untuk menjaga integritas informasi demi masyarakat yang cerdas dan berdaya."</h3>
         <div class="flex items-center justify-center gap-4">
-          <img src="https://ui-avatars.com/api/?name=Editor+Chief&background=random" class="w-12 h-12 rounded-full border-2 border-amber-400" alt="Editor">
+          <img src="https://raw.githubusercontent.com/SayaKurma/Kartu-Profil/refs/heads/main/profile.jpg" class="w-12 h-12 rounded-full border-2 border-amber-400" alt="Editor">
           <div class="text-left">
             <p class="font-bold text-slate-900">Muhammad Alfaridzi</p>
             <p class="text-xs text-slate-500 uppercase tracking-wide">Pemimpin Redaksi</p>
