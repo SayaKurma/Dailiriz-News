@@ -48,80 +48,6 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #9b2c2c;
         }
-        .article-content p {
-            margin-bottom: 1.5rem;
-            line-height: 1.8;
-        }
-        .article-content h2 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-            color: #1f2937;
-        }
-        .article-content h3 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-top: 1.5rem;
-            margin-bottom: 1rem;
-            color: #374151;
-        }
-        .article-content blockquote {
-            border-left: 4px solid #dc2626;
-            padding-left: 1.5rem;
-            margin: 2rem 0;
-            font-style: italic;
-            color: #4b5563;
-        }
-        .article-content ul {
-            list-style-type: disc;
-            padding-left: 2rem;
-            margin-bottom: 1.5rem;
-        }
-        .article-content ol {
-            list-style-type: decimal;
-            padding-left: 2rem;
-            margin-bottom: 1.5rem;
-        }
-        @media (max-width: 768px) {
-            .article-content h2 {
-                font-size: 1.3rem;
-                margin-top: 1.5rem;
-                margin-bottom: 0.75rem;
-            }
-            .article-content h3 {
-                font-size: 1.1rem;
-                margin-top: 1.25rem;
-                margin-bottom: 0.75rem;
-            }
-            .article-content p {
-                font-size: 0.95rem;
-                line-height: 1.7;
-                margin-bottom: 1.25rem;
-            }
-            .share-buttons {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-            .share-buttons button {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-        @media (max-width: 640px) {
-            #article-title {
-                font-size: 1.75rem !important;
-                line-height: 1.3 !important;
-            }
-            .article-meta {
-                flex-direction: column;
-                gap: 0.5rem !important;
-                align-items: flex-start !important;
-            }
-            #related-articles {
-                grid-template-columns: 1fr !important;
-            }
-        }
         .image-hover-zoom {
             overflow: hidden;
         }
@@ -143,15 +69,25 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
+        #mobile-menu::-webkit-scrollbar {
+            width: 4px;
+        }
+        #mobile-menu::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+        }
+        #mobile-menu::-webkit-scrollbar-thumb {
+            background: rgba(255,215,0,0.5);
+            border-radius: 2px;
+        }
     </style>
 </head>
-<body class="bg-stone-50 text-slate-800">
+<body class="bg-stone-50 text-slate-800 flex flex-col min-h-screen">
     <div class="bg-slate-900 text-slate-300 py-1 text-xs">
         <div class="container mx-auto px-4 flex justify-between items-center">
             <span id="current-date"></span>
             <div class="flex gap-4">
-                <a href="index.html" class="hover:text-white">Edisi Digital</a>
-                <a href="index.html" class="hover:text-white">Langganan</a>
+                <a href="#" class="hover:text-white">Edisi Digital</a>
+                <a href="#" class="hover:text-white">Langganan</a>
             </div>
         </div>
     </div>
@@ -166,11 +102,11 @@
                     </h1>
                 </div>
                 <nav class="hidden md:flex space-x-6 text-white font-medium text-sm tracking-wider">
-                    <a href="index.html" class="hover:text-amber-200 transition-colors border-b-2 border-transparent hover:border-amber-200 pb-1">BERANDA</a>
-                    <a href="index.html" class="hover:text-amber-200 transition-colors border-b-2 border-transparent hover:border-amber-200 pb-1">NEWS</a>
-                    <a href="index.html" class="hover:text-amber-200 transition-colors border-b-2 border-transparent hover:border-amber-200 pb-1">FEATURE</a>
-                    <a href="index.html" class="hover:text-amber-200 transition-colors border-b-2 border-transparent hover:border-amber-200 pb-1">OPINI</a>
-                    <a href="index.html" class="hover:text-amber-200 transition-colors border-b-2 border-transparent hover:border-amber-200 pb-1">CEK FAKTA</a>
+                    <a href="javascript:void(0)" onclick="window.location.href='index.html'" class="hover:text-amber-200 transition-colors border-b-2 border-transparent hover:border-amber-200 pb-1">BERANDA</a>
+                    <a href="javascript:void(0)" onclick="window.location.href='index.html?page=news'" class="hover:text-amber-200 transition-colors border-b-2 border-transparent hover:border-amber-200 pb-1">NEWS</a>
+                    <a href="javascript:void(0)" onclick="window.location.href='index.html?page=feature'" class="hover:text-amber-200 transition-colors border-b-2 border-transparent hover:border-amber-200 pb-1">FEATURE</a>
+                    <a href="javascript:void(0)" onclick="window.location.href='index.html?page=opini'" class="hover:text-amber-200 transition-colors border-b-2 border-transparent hover:border-amber-200 pb-1">OPINI</a>
+                    <a href="javascript:void(0)" onclick="window.location.href='index.html?page=cek-fakta'" class="hover:text-amber-200 transition-colors border-b-2 border-transparent hover:border-amber-200 pb-1">CEK FAKTA</a>
                 </nav>
                 <div class="flex items-center gap-4">
                     <button id="search-btn" class="text-white hover:text-amber-200 transition">
@@ -197,16 +133,16 @@
                 <a href="index.html" class="hover:text-amber-300 transition flex items-center gap-3 py-2">
                     <i data-lucide="home" class="w-4 h-4"></i> Beranda
                 </a>
-                <a href="index.html" class="hover:text-amber-300 transition flex items-center gap-3 py-2">
+                <a href="index.html?page=news" class="hover:text-amber-300 transition flex items-center gap-3 py-2">
                     <i data-lucide="globe" class="w-4 h-4"></i> News
                 </a>
-                <a href="index.html" class="hover:text-amber-300 transition flex items-center gap-3 py-2">
+                <a href="index.html?page=feature" class="hover:text-amber-300 transition flex items-center gap-3 py-2">
                     <i data-lucide="star" class="w-4 h-4"></i> Feature
                 </a>
-                <a href="index.html" class="hover:text-amber-300 transition flex items-center gap-3 py-2">
+                <a href="index.html?page=opini" class="hover:text-amber-300 transition flex items-center gap-3 py-2">
                     <i data-lucide="pen-tool" class="w-4 h-4"></i> Opini
                 </a>
-                <a href="index.html" class="hover:text-amber-300 transition flex items-center gap-3 py-2">
+                <a href="index.html?page=cek-fakta" class="hover:text-amber-300 transition flex items-center gap-3 py-2">
                     <i data-lucide="shield-check" class="w-4 h-4"></i> Cek Fakta
                 </a>
             </nav>
@@ -216,18 +152,18 @@
         </div>
     </header>
 
-    <main class="container mx-auto px-4 py-6 md:py-8">
+    <main class="container mx-auto px-4 py-8 flex-grow">
         <div class="max-w-4xl mx-auto">
-            <nav class="mb-6 md:mb-8 text-sm text-slate-500">
+            <nav class="mb-8 text-sm text-slate-500">
                 <a href="index.html" class="hover:text-red-600">Beranda</a>
                 <span class="mx-2">/</span>
                 <span id="article-category" class="text-red-600 font-medium"></span>
             </nav>
 
-            <header class="mb-6 md:mb-8">
-                <span id="article-category-badge" class="inline-block bg-red-100 text-red-700 text-xs font-bold px-3 py-1 rounded-full mb-3 md:mb-4"></span>
-                <h1 id="article-title" class="font-serif text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-slate-900 leading-tight mb-3 md:mb-4"></h1>
-                <div class="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 text-slate-600 text-sm mb-4 md:mb-6 article-meta">
+            <header class="mb-8">
+                <span id="article-category-badge" class="inline-block bg-red-100 text-red-700 text-xs font-bold px-3 py-1 rounded-full mb-4"></span>
+                <h1 id="article-title" class="font-serif text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 leading-tight mb-4"></h1>
+                <div class="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 text-slate-600 text-sm mb-6 article-meta">
                     <div class="flex items-center gap-2">
                         <i data-lucide="user" class="w-4 h-4"></i>
                         <span id="article-author"></span>
@@ -243,9 +179,9 @@
                 </div>
             </header>
 
-            <div class="mb-6 md:mb-8 rounded-xl overflow-hidden shadow-lg image-hover-zoom">
-                <img id="article-image" src="" alt="" class="w-full h-auto max-h-[300px] md:max-h-[400px] lg:max-h-[500px] object-cover" loading="eager" fetchpriority="high">
-                <div class="mt-2 px-2 md:px-0">
+            <div class="mb-8 rounded-xl overflow-hidden shadow-lg image-hover-zoom">
+                <img id="article-image" src="" alt="" class="w-full h-auto max-h-[500px] object-cover" loading="eager" fetchpriority="high">
+                <div class="mt-2 px-2">
                     <p class="text-xs text-slate-500 italic" id="image-caption"></p>
                     <p class="text-xs text-slate-400 mt-1">
                         Sumber: <span id="image-source-dynamic">Memuat...</span>
@@ -253,13 +189,13 @@
                 </div>
             </div>
 
-            <article class="prose prose-lg max-w-none mb-8 md:mb-12 px-2 md:px-0">
+            <article class="prose prose-lg max-w-none mb-12 px-2">
                 <div id="article-content" class="article-content text-slate-700"></div>
             </article>
 
-            <div class="bg-slate-50 p-4 md:p-6 rounded-xl mb-8 md:mb-12">
-                <h3 class="font-bold text-lg mb-3 md:mb-4 text-slate-800">Bagikan Artikel Ini</h3>
-                <div class="flex flex-col md:flex-row gap-2 md:gap-4 share-buttons">
+            <div class="bg-slate-50 p-6 rounded-xl mb-12">
+                <h3 class="font-bold text-lg mb-4 text-slate-800">Bagikan Artikel Ini</h3>
+                <div class="flex flex-col md:flex-row gap-4 share-buttons">
                     <button class="flex items-center justify-center md:justify-start gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
                         <i data-lucide="facebook" class="w-4 h-4"></i>
                         Facebook
@@ -275,19 +211,19 @@
                 </div>
             </div>
 
-            <section class="mb-10 md:mb-16">
-                <h2 class="font-serif text-xl md:text-2xl font-bold text-slate-800 mb-4 md:mb-6 pb-2 border-b border-slate-200">Artikel Terkait</h2>
-                <div id="related-articles" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"></div>
+            <section class="mb-16">
+                <h2 class="font-serif text-2xl font-bold text-slate-800 mb-6 pb-2 border-b border-slate-200">Artikel Terkait</h2>
+                <div id="related-articles" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </section>
 
-            <section class="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-8 md:mb-12">
-                <h2 class="font-serif text-xl md:text-2xl font-bold text-slate-800 mb-4 md:mb-6">Komentar</h2>
-                <div class="mb-6 md:mb-8">
+            <section class="bg-white rounded-xl shadow-sm p-6 mb-12">
+                <h2 class="font-serif text-2xl font-bold text-slate-800 mb-6">Komentar</h2>
+                <div class="mb-8">
                     <input type="text" id="comment-name" placeholder="Nama Anda (opsional)" class="w-full p-3 border border-slate-300 rounded-lg focus:outline-none focus:border-red-500 text-sm mb-2">
-                    <textarea id="comment-input" placeholder="Tulis komentar Anda..." class="w-full p-3 md:p-4 border border-slate-300 rounded-lg focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-200 text-sm md:text-base" rows="4"></textarea>
-                    <button id="submit-comment" class="mt-3 md:mt-4 bg-red-600 text-white px-5 md:px-6 py-2 rounded-lg font-medium hover:bg-red-700 transition w-full md:w-auto">Kirim Komentar</button>
+                    <textarea id="comment-input" placeholder="Tulis komentar Anda..." class="w-full p-4 border border-slate-300 rounded-lg focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-200 text-base" rows="4"></textarea>
+                    <button id="submit-comment" class="mt-4 bg-red-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-700 transition w-full md:w-auto">Kirim Komentar</button>
                 </div>
-                <div id="comments-list" class="space-y-4 md:space-y-6"></div>
+                <div id="comments-list" class="space-y-6"></div>
             </section>
         </div>
     </main>
@@ -324,11 +260,11 @@
                 <div>
                     <h3 class="font-bold text-lg mb-4 text-amber-200 font-serif">Perusahaan</h3>
                     <ul class="space-y-2 text-sm text-red-50">
-                        <li><a href="index.html" class="hover:text-white transition">Tentang Kami</a></li>
-                        <li><a href="index.html" class="hover:text-white transition">Redaksi</a></li>
-                        <li><a href="index.html" class="hover:text-white transition">Pedoman Media Siber</a></li>
-                        <li><a href="index.html" class="hover:text-white transition">Karir</a></li>
-                        <li><a href="index.html" class="hover:text-white transition">Kontak</a></li>
+                        <li><a href="javascript:void(0)" onclick="window.location.href='index.html?page=tentang-kami'" class="hover:text-white transition">Tentang Kami</a></li>
+                        <li><a href="javascript:void(0)" onclick="window.location.href='index.html?page=redaksi'" class="hover:text-white transition">Redaksi</a></li>
+                        <li><a href="javascript:void(0)" onclick="window.location.href='index.html?page=pedoman-media-siber'" class="hover:text-white transition">Pedoman Media Siber</a></li>
+                        <li><a href="javascript:void(0)" onclick="window.location.href='index.html?page=karir'" class="hover:text-white transition">Karir</a></li>
+                        <li><a href="javascript:void(0)" onclick="window.location.href='index.html?page=kontak'" class="hover:text-white transition">Kontak</a></li>
                     </ul>
                 </div>
                 <div>
@@ -352,8 +288,8 @@
             <div class="border-t border-white/20 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-red-100">
                 <p>&copy; 2026 Dailiriz. Hak Cipta Dilindungi Undang-Undang.</p>
                 <div class="flex gap-6 mt-4 md:mt-0">
-                    <a href="index.html" class="hover:text-white">Kebijakan Privasi</a>
-                    <a href="index.html" class="hover:text-white">Syarat & Ketentuan</a>
+                    <a href="javascript:void(0)" onclick="window.location.href='index.html?page=kebijakan-privasi'" class="hover:text-white">Kebijakan Privasi</a>
+                    <a href="javascript:void(0)" onclick="window.location.href='index.html?page=syarat-ketentuan'" class="hover:text-white">Syarat & Ketentuan</a>
                 </div>
             </div>
         </div>
@@ -367,38 +303,36 @@
         </div>
     </div>
 
+    <div id="search-modal" class="fixed inset-0 bg-slate-900/95 z-[60] hidden flex-col p-6 md:p-20 transition-all duration-300 backdrop-blur-sm">
+        <div class="max-w-4xl mx-auto w-full">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-amber-400 font-serif text-xl font-bold">🔍 Pencarian Artikel</h2>
+                <button id="close-search" class="text-white hover:text-amber-400 transition p-2">
+                    <i data-lucide="x" class="w-8 h-8"></i>
+                </button>
+            </div>
+            
+            <div class="relative mb-6">
+                <input type="text" id="search-input" placeholder="Ketik kata kunci berita..." 
+                    class="w-full bg-transparent border-b-2 border-slate-700 py-4 text-xl md:text-2xl text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition">
+                <i data-lucide="search" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5"></i>
+            </div>
+
+            <div class="flex flex-wrap gap-2 mb-8" id="search-filters">
+                <button class="filter-btn active bg-amber-400 text-red-900 px-4 py-1.5 rounded-full text-xs font-bold transition" data-cat="all">Semua</button>
+                <button class="filter-btn border border-slate-700 text-slate-300 px-4 py-1.5 rounded-full text-xs hover:bg-white/10 transition" data-cat="Nasional">Nasional</button>
+                <button class="filter-btn border border-slate-700 text-slate-300 px-4 py-1.5 rounded-full text-xs hover:bg-white/10 transition" data-cat="Ekonomi">Ekonomi</button>
+                <button class="filter-btn border border-slate-700 text-slate-300 px-4 py-1.5 rounded-full text-xs hover:bg-white/10 transition" data-cat="Teknologi">Teknologi</button>
+                <button class="filter-btn border border-slate-700 text-slate-300 px-4 py-1.5 rounded-full text-xs hover:bg-white/10 transition" data-cat="Olahraga">Olahraga</button>
+            </div>
+
+            <div id="search-results-list" class="space-y-3 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
+                <p class="text-slate-400 text-sm text-center py-8">Ketik minimal 2 karakter untuk mencari...</p>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="./js/firebase-config.js"></script>
     <script type="module" src="./js/article-detail.js"></script>
-    <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const mobileBtn = document.getElementById('mobile-menu-btn');
-  const closeBtn = document.getElementById('close-menu-btn');
-  const mobileMenu = document.getElementById('mobile-menu');
-  const overlay = document.getElementById('mobile-overlay');
-
-  const openMenu = () => {
-    if(!mobileMenu || !overlay) return;
-    overlay.classList.remove('hidden', 'pointer-events-none');
-    setTimeout(() => overlay.classList.remove('opacity-0'), 10);
-    mobileMenu.classList.remove('translate-x-full');
-    document.body.classList.add('overflow-hidden');
-  };
-
-  const closeMenu = () => {
-    if(!mobileMenu || !overlay) return;
-    mobileMenu.classList.add('translate-x-full');
-    overlay.classList.add('opacity-0');
-    setTimeout(() => {
-      overlay.classList.add('hidden', 'pointer-events-none');
-      document.body.classList.remove('overflow-hidden');
-    }, 300);
-  };
-
-  if(mobileBtn) mobileBtn.addEventListener('click', openMenu);
-  if(closeBtn) closeBtn.addEventListener('click', closeMenu);
-  if(overlay) overlay.addEventListener('click', closeMenu);
-  document.addEventListener('keydown', e => { if(e.key === 'Escape') closeMenu(); });
-});
-</script>
 </body>
 </html>
