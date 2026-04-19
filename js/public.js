@@ -32,7 +32,7 @@ async function fetchGlobalBreakingNews() {
     if (globalNewsCache && cacheTimestamp && (Date.now() - cacheTimestamp) < CACHE_DURATION) {
         return globalNewsCache;
     }
-    const API_KEY = 'YOUR_NEWSAPI_KEY';
+    const API_KEY = 'cf49db603f5f4f7cbb8808a42e4afe2b';
     const url = `https://newsapi.org/v2/top-headlines?country=id&pageSize=5&apiKey=${API_KEY}`;
     try {
         const response = await fetch(url);
