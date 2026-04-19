@@ -62,10 +62,13 @@ async function loadArticle() {
     if (titleEl) titleEl.textContent = currentArticle.title;
     if (authorEl) authorEl.textContent = currentArticle.author || 'Redaksi Dailiriz';
     if (dateEl) dateEl.textContent = formatDateID(currentArticle.createdAt);
-    if (imageEl) {
-      imageEl.src = currentArticle.image || 'https://via.placeholder.com/800x400';
-      imageEl.alt = currentArticle.title;
-    }
+    // Tampilkan caption gambar
+const captionEl = document.getElementById('image-caption');
+if (captionEl && currentArticle.imageCaption) {
+  captionEl.textContent = currentArticle.imageCaption;
+} else if (captionEl) {
+  captionEl.textContent = '';
+}
     const contentEl = document.getElementById('article-content');
     if (contentEl && currentArticle.content) {
       const paragraphs = currentArticle.content.split('\n\n').filter(p => p.trim());
