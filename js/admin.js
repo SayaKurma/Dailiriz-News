@@ -150,12 +150,12 @@ async function loadArticlesToTable() {
   const dashboardTbody = document.getElementById('dashboard-articles-tbody');
   const dashboardMobile = document.getElementById('dashboard-mobile-cards');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Memuat data...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Memuat data......</td></tr>';
   try {
     const q = query(collection(db, "articles"), orderBy("createdAt", "desc"));
     const snapshot = await getDocs(q);
     if (snapshot.empty) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-slate-500">Belum ada artikel</tbody>';
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-slate-500">Belum ada artikel</td></tr>';
       if (mobileContainer) mobileContainer.innerHTML = '<div class="text-center py-4 text-slate-500">Belum ada artikel</div>';
       if (dashboardTbody) dashboardTbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Belum ada artikel</td></tr>';
       return;
@@ -179,7 +179,7 @@ async function loadArticlesToTable() {
     if (typeof lucide !== 'undefined') lucide.createIcons();
   } catch (error) {
     console.error('Error loading articles:', error);
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-600">Gagal memuat数据</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-600">Gagal memuat data</td></tr>';
   }
 }
 
@@ -208,7 +208,7 @@ async function loadModerationList() {
         <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">${escapeHtml(article.category || 'Umum')}</span></td>
         <td class="px-6 py-4 text-sm text-slate-500">${formatDateID(article.createdAt)}</td>
         <td class="px-6 py-4 text-center"><button class="px-3 py-1.5 bg-red-50 text-red-600 rounded hover:bg-red-100 text-sm font-medium transition-colors review-article-btn" data-id="${article.id}">Tinjau</button></td>
-       </tr>
+      </tr>
     `).join('');
     if (mobileContainer) {
       mobileContainer.innerHTML = pendingArticles.map(article => `
@@ -264,7 +264,6 @@ function setupEventListeners() {
     document.getElementById('article-title').value = ''; 
     document.getElementById('article-content').value = ''; 
     document.getElementById('article-status').value = 'draft'; 
-    document.getElementById('article-image-caption').value = '';
     document.getElementById('form-title').textContent = 'Tulis Artikel Baru'; 
     document.getElementById('submit-btn-text').textContent = 'Terbitkan';
     document.getElementById('article-preview-panel')?.classList.add('hidden');
@@ -318,6 +317,7 @@ function setupEventListeners() {
   const filterBtns = document.querySelectorAll('.article-filter-btn');
   filterBtns.forEach(btn => { btn.addEventListener('click', () => filterArticles(btn.dataset.filter)); });
   
+  // Editor toolbar handlers
   document.querySelectorAll('[data-format]').forEach(btn => {
     btn.addEventListener('click', () => {
       const textarea = document.getElementById('article-content');
@@ -331,6 +331,7 @@ function setupEventListeners() {
     });
   });
   
+  // Preview toggle
   const previewToggle = document.getElementById('preview-toggle-btn');
   if (previewToggle) {
     previewToggle.addEventListener('click', () => {
@@ -343,6 +344,7 @@ function setupEventListeners() {
     });
   }
   
+  // Insert image
   const insertImageBtn = document.getElementById('insert-image-btn');
   if (insertImageBtn) {
     insertImageBtn.addEventListener('click', () => {
@@ -357,6 +359,7 @@ function setupEventListeners() {
     });
   }
   
+  // Auto-generate URL slug from title
   const titleInput = document.getElementById('article-title');
   const urlSlugSpan = document.getElementById('url-slug');
   if (titleInput && urlSlugSpan) {
@@ -440,6 +443,7 @@ async function handleEditArticle(id) {
       document.getElementById('article-list-view').classList.add('hidden');
       document.getElementById('create-article-form').classList.remove('hidden');
       document.getElementById('article-preview-panel')?.classList.add('hidden');
+      // Trigger slug generation
       const urlSlugSpan = document.getElementById('url-slug');
       if (urlSlugSpan && article.title) {
         const slug = article.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
