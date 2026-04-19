@@ -286,7 +286,7 @@ function renderStaticPage(pageName, container) {
 let currentSearchCategory = 'all';
 
 function initSearchLogic() {
-    const searchBtn = document.querySelector('button[onclick*="search"] i[data-lucide="search"]')?.closest('button');
+    const searchBtn = document.getElementById('search-btn');
     const modal = document.getElementById('search-modal');
     const input = document.getElementById('search-input');
     const resultsContainer = document.getElementById('search-results-list');
