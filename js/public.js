@@ -24,6 +24,43 @@ export async function subscribe() {
   emailInput.value = '';
 }
 
+let globalNewsCache = null;
+let cacheTimestamp = null;
+
+async function fetchGlobalBreakingNews() {
+    const CACHE_DURATION = 30 * 60 * 1000;
+    if (globalNewsCache && cacheTimestamp && (Date.now() - cacheTimestamp) < CACHE_DURATION) {
+        return globalNewsCache;
+    }
+    const API_KEY = 'YOUR_NEWSAPI_KEY';
+    const url = `https://newsapi.org/v2/top-headlines?country=id&pageSize=5&apiKey=${API_KEY}`;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const data = await response.json();
+        const result = data.articles.filter(a => a.title && a.title.trim() !== '').map(a => a.title).slice(0, 3);
+        globalNewsCache = result;
+        cacheTimestamp = Date.now();
+        return result;
+    } catch (error) {
+        console.warn('Gagal fetch external news:', error);
+        return [];
+    }
+}
+
+async function renderBreakingNews(articles) {
+    const ticker = document.getElementById('breaking-news-ticker');
+    if (!ticker) return;
+    const globalNews = await fetchGlobalBreakingNews();
+    const internalNews = articles.slice(0, 3).map(a => a.title);
+    const allTitles = [...globalNews, ...internalNews].filter(t => t);
+    if (allTitles.length === 0) {
+        ticker.textContent = 'Selamat datang di Dailiriz - Berita Terkini & Terpercaya';
+    } else {
+        ticker.textContent = allTitles.join(' ••• ');
+    }
+}
+
 export async function loadNewsData() {
   try {
     const q = query(collection(db, "articles"), where("status", "==", "published"), orderBy("createdAt", "desc"), limit(20));
@@ -38,7 +75,7 @@ export async function loadNewsData() {
       document.getElementById('featured-article').innerHTML = '<div class="bg-slate-200 h-[400px] rounded-xl flex items-center justify-center">Belum ada berita utama</div>';
       return;
     }
-    renderBreakingNews(articles);
+    await renderBreakingNews(articles);
     renderFeaturedArticle(articles[0]);
     renderPopularArticles(articles.slice(1, 5));
     renderLatestNews(articles.slice(5, 13));
@@ -46,13 +83,6 @@ export async function loadNewsData() {
     console.error('Error loading news:', error);
     document.getElementById('breaking-news-ticker').textContent = 'Gagal memuat berita. Silakan muat ulang halaman.';
   }
-}
-
-function renderBreakingNews(articles) {
-  const ticker = document.getElementById('breaking-news-ticker');
-  if (!ticker) return;
-  const titles = articles.slice(0, 5).map(a => a.title).join(' ••• ');
-  ticker.textContent = titles || 'Selamat datang di Dailiriz';
 }
 
 function renderFeaturedArticle(article) {
@@ -253,6 +283,115 @@ function renderStaticPage(pageName, container) {
   `;
 }
 
+let currentSearchCategory = 'all';
+
+function initSearchLogic() {
+    const searchBtn = document.querySelector('button[onclick*="search"] i[data-lucide="search"]')?.closest('button');
+    const modal = document.getElementById('search-modal');
+    const input = document.getElementById('search-input');
+    const resultsContainer = document.getElementById('search-results-list');
+    
+    if (!searchBtn || !modal || !input) {
+        console.warn('Search elements not found');
+        return;
+    }
+
+    searchBtn.onclick = (e) => {
+        e.preventDefault();
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        input.focus();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    };
+
+    document.getElementById('close-search')?.addEventListener('click', () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        input.value = '';
+        resultsContainer.innerHTML = '<p class="text-slate-400 text-sm text-center py-8">Ketik minimal 2 karakter untuk mencari...</p>';
+    });
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    });
+    
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    });
+
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    const performSearch = () => {
+        const keyword = input.value.toLowerCase().trim();
+        
+        if (keyword.length < 2) {
+            resultsContainer.innerHTML = '<p class="text-slate-400 text-sm text-center py-8">Ketik minimal 2 karakter untuk mencari...</p>';
+            return;
+        }
+
+        const filtered = allArticles.filter(art => {
+            const matchTitle = art.title?.toLowerCase().includes(keyword);
+            const matchDesc = art.description?.toLowerCase().includes(keyword);
+            const matchCat = currentSearchCategory === 'all' || art.category === currentSearchCategory;
+            return (matchTitle || matchDesc) && matchCat;
+        });
+
+        if (filtered.length === 0) {
+            resultsContainer.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">Tidak ada hasil untuk "${keyword}"</p>`;
+            return;
+        }
+
+        resultsContainer.innerHTML = filtered.map(art => `
+            <div class="flex gap-4 p-3 hover:bg-white/5 rounded-lg cursor-pointer border-b border-white/5 transition group" 
+                 onclick="window.location.href='article.html?id=${art.id}'">
+                <img src="${art.image || 'https://via.placeholder.com/64x64'}" 
+                     class="w-16 h-16 object-cover rounded-lg flex-shrink-0" 
+                     alt="${art.title}"
+                     onerror="this.src='https://via.placeholder.com/64x64?text=No+Image'">
+                <div class="flex-1 min-w-0">
+                    <h4 class="text-white font-medium text-sm group-hover:text-amber-400 transition line-clamp-2">${art.title}</h4>
+                    <span class="text-amber-400 text-[10px] uppercase font-bold tracking-wide">${art.category || 'Berita'}</span>
+                    <p class="text-slate-400 text-xs mt-1 line-clamp-1">${art.description || ''}</p>
+                </div>
+            </div>
+        `).join('');
+        
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    };
+
+    input.addEventListener('input', debounce(performSearch, 300));
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.remove('bg-amber-400', 'text-red-900', 'active');
+                b.classList.add('border', 'border-slate-700', 'text-slate-300');
+            });
+            btn.classList.remove('border', 'border-slate-700', 'text-slate-300');
+            btn.classList.add('bg-amber-400', 'text-red-900', 'active');
+            
+            currentSearchCategory = btn.dataset.cat;
+            performSearch();
+        };
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const dateElement = document.getElementById('current-date');
   if (dateElement) {
@@ -271,5 +410,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  initSearchLogic();
   window.navigateTo('beranda');
 });
