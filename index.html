@@ -62,6 +62,16 @@
             -webkit-box-orient: vertical;  
             overflow: hidden;  
         }  
+        #mobile-menu::-webkit-scrollbar {  
+            width: 4px;  
+        }  
+        #mobile-menu::-webkit-scrollbar-track {  
+            background: rgba(255,255,255,0.1);  
+        }  
+        #mobile-menu::-webkit-scrollbar-thumb {  
+            background: rgba(255,215,0,0.5);  
+            border-radius: 2px;  
+        }  
     </style>  
 </head>  
 <body class="bg-stone-50 text-slate-800 flex flex-col min-h-screen">  
@@ -101,13 +111,36 @@
                 </div>  
             </div>  
         </div>  
-        <div id="mobile-menu" class="hidden md:hidden bg-red-900 border-t border-red-700">  
-            <div class="flex flex-col p-4 space-y-3 text-white font-medium">  
-                <a href="javascript:void(0)" onclick="window.navigateTo('beranda')" class="hover:text-amber-300">Beranda</a>  
-                <a href="javascript:void(0)" onclick="window.navigateTo('news')" class="hover:text-amber-300">News</a>  
-                <a href="javascript:void(0)" onclick="window.navigateTo('feature')" class="hover:text-amber-300">Feature</a>  
-                <a href="javascript:void(0)" onclick="window.navigateTo('opini')" class="hover:text-amber-300">Opini</a>  
-                <a href="javascript:void(0)" onclick="window.navigateTo('cek-fakta')" class="hover:text-amber-300">Cek Fakta</a>  
+        <div id="mobile-overlay" class="fixed inset-0 bg-black/60 z-40 hidden opacity-0 transition-opacity duration-300 pointer-events-none"></div>  
+        <div id="mobile-menu" class="fixed top-0 right-0 h-full w-64 bg-gradient-to-b from-red-900 to-red-800 z-50 transform translate-x-full transition-transform duration-300 ease-in-out shadow-2xl flex flex-col md:hidden">  
+            <div class="flex justify-between items-center p-5 border-b border-red-700/50">  
+                <div class="flex items-center gap-2">  
+                    <i data-lucide="newspaper" class="text-white w-6 h-6"></i>  
+                    <span class="font-serif text-xl font-bold text-white tracking-wide">Daili<span class="text-amber-200 italic">Riz</span></span>  
+                </div>  
+                <button id="close-menu-btn" class="text-white hover:text-amber-200 transition-colors p-1">  
+                    <i data-lucide="x" class="w-6 h-6"></i>  
+                </button>  
+            </div>  
+            <nav class="flex flex-col p-5 space-y-4 text-white font-medium overflow-y-auto flex-1">  
+                <a href="javascript:void(0)" onclick="window.navigateTo('beranda')" class="hover:text-amber-300 transition flex items-center gap-3 py-2">  
+                    <i data-lucide="home" class="w-4 h-4"></i> Beranda  
+                </a>  
+                <a href="javascript:void(0)" onclick="window.navigateTo('news')" class="hover:text-amber-300 transition flex items-center gap-3 py-2">  
+                    <i data-lucide="globe" class="w-4 h-4"></i> News  
+                </a>  
+                <a href="javascript:void(0)" onclick="window.navigateTo('feature')" class="hover:text-amber-300 transition flex items-center gap-3 py-2">  
+                    <i data-lucide="star" class="w-4 h-4"></i> Feature  
+                </a>  
+                <a href="javascript:void(0)" onclick="window.navigateTo('opini')" class="hover:text-amber-300 transition flex items-center gap-3 py-2">  
+                    <i data-lucide="pen-tool" class="w-4 h-4"></i> Opini  
+                </a>  
+                <a href="javascript:void(0)" onclick="window.navigateTo('cek-fakta')" class="hover:text-amber-300 transition flex items-center gap-3 py-2">  
+                    <i data-lucide="shield-check" class="w-4 h-4"></i> Cek Fakta  
+                </a>  
+            </nav>  
+            <div class="p-5 border-t border-red-700/50 text-xs text-red-200">  
+                &copy; 2026 Dailiriz  
             </div>  
         </div>  
     </header>  
