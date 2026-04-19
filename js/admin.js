@@ -7,6 +7,7 @@ import {
 
 let currentUser = null;
 let currentEditId = null;
+let analyticsChartInstance = null;
 
 export async function initAdminPanel() {
   currentUser = await checkAuth(true);
@@ -40,20 +41,58 @@ async function loadDashboardStats() {
     if (articlesEl) articlesEl.textContent = publishedCount;
     if (draftEl) draftEl.textContent = draftCount;
     if (articleBadge) articleBadge.textContent = publishedCount;
+    
     const chartCtx = document.getElementById('analyticsChart');
     if (chartCtx) {
-      const last7Days = [];
-      const viewsData = [];
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        last7Days.push(date.toLocaleDateString('id-ID', { weekday: 'short' }));
-        viewsData.push(Math.floor(Math.random() * 5000) + 1000);
-      }
-      new Chart(chartCtx, {
+      if (analyticsChartInstance) analyticsChartInstance.destroy();
+      const last7Days = Array.from({length: 7}, (_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (6 - i));
+        return d.toLocaleDateString('id-ID', { weekday: 'short' });
+      });
+      analyticsChartInstance = new Chart(chartCtx, {
         type: 'line',
-        data: { labels: last7Days, datasets: [{ label: 'Tayangan', data: viewsData, borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.1)', borderWidth: 2, fill: true, tension: 0.4 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        data: {
+          labels: last7Days,
+          datasets: [{
+            label: 'Tayangan',
+            data: Array.from({length: 7}, () => Math.floor(Math.random() * 4000) + 1000),
+            borderColor: '#dc2626',
+            backgroundColor: 'rgba(220,38,38,0.08)',
+            borderWidth: 2.5,
+            fill: true,
+            tension: 0.35,
+            pointRadius: 3,
+            pointHoverRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { 
+            legend: { display: false },
+            tooltip: { 
+              backgroundColor: 'rgba(15, 23, 42, 0.95)',
+              padding: 12,
+              titleFont: { size: 13 },
+              bodyFont: { size: 12 }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false },
+              ticks: { 
+                font: { size: 11 },
+                callback: (val) => val >= 1000 ? `${val/1000}k` : val
+              }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 11 } }
+            }
+          }
+        }
       });
     }
     const recentComments = document.getElementById('recent-comments');
@@ -63,13 +102,55 @@ async function loadDashboardStats() {
   } catch (error) { console.error('Error loading stats:', error); }
 }
 
+function getArticleDisplayData(article) {
+  return {
+    title: escapeHtml(article.title),
+    category: escapeHtml(article.category || 'Umum'),
+    author: escapeHtml(article.author || 'Admin'),
+    date: formatDateID(article.createdAt),
+    views: (article.views || 0).toLocaleString('id-ID'),
+    status: article.status,
+    statusText: { published: 'Terbit', draft: 'Draft', archived: 'Arsip', pending: 'Menunggu' }[article.status] || 'Draft',
+    statusClass: { published: 'status-published', draft: 'status-draft', archived: 'status-archive', pending: 'status-pending' }[article.status] || 'status-draft'
+  };
+}
+
+function createArticleRow(article) {
+  const d = getArticleDisplayData(article);
+  const tr = document.createElement('tr');
+  tr.className = 'hover:bg-slate-50 transition-colors group';
+  tr.innerHTML = `
+    <td class="px-4 md:px-6 py-3 md:py-4">
+      <p class="font-semibold text-slate-800 truncate max-w-[200px] md:max-w-xs" title="${d.title}">${d.title}</p>
+      <p class="text-xs text-slate-400 mt-1">${d.views} tayangan</p>
+    </td>
+    <td class="px-4 md:px-6 py-3 md:py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700">${d.category}</span></td>
+    <td class="px-4 md:px-6 py-3 md:py-4 text-sm text-slate-600">${d.author}</td>
+    <td class="px-4 md:px-6 py-3 md:py-4 text-sm text-slate-500">${d.date}</td>
+    <td class="px-4 md:px-6 py-3 md:py-4"><span class="status-badge ${d.statusClass}">${d.statusText}</span></td>
+    <td class="px-4 md:px-6 py-3 md:py-4 text-center"><div class="flex justify-center space-x-2"><button class="p-1.5 hover:bg-red-100 text-red-600 rounded transition edit-article-btn" data-id="${article.id}"><i data-lucide="edit" class="w-4 h-4"></i></button><button class="p-1.5 hover:bg-red-50 text-red-600 rounded transition delete-article-btn" data-id="${article.id}"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td>
+  `;
+  return tr;
+}
+
+function createArticleMobileCard(article) {
+  const d = getArticleDisplayData(article);
+  const div = document.createElement('div');
+  div.className = 'table-card-mobile';
+  div.innerHTML = `
+    <div class="table-card-header"><div class="flex justify-between items-start"><h4 class="font-semibold text-slate-800 text-sm truncate flex-1 pr-2" title="${d.title}">${d.title}</h4><span class="status-badge ${d.statusClass} flex-shrink-0">${d.statusText}</span></div></div>
+    <div class="table-card-body"><div class="table-card-row"><span class="table-card-label">Kategori</span><span class="table-card-value">${d.category}</span></div><div class="table-card-row"><span class="table-card-label">Penulis</span><span class="table-card-value">${d.author}</span></div><div class="table-card-row"><span class="table-card-label">Tanggal</span><span class="table-card-value">${d.date}</span></div><div class="table-card-row"><span class="table-card-label">Tayangan</span><span class="table-card-value">${d.views}</span></div><div class="pt-3 flex justify-between"><button class="flex-1 mr-2 bg-slate-100 text-slate-700 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1 edit-article-btn" data-id="${article.id}"><i data-lucide="edit" class="w-3 h-3"></i> Edit</button><button class="flex-1 ml-2 bg-red-50 text-red-600 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1 delete-article-btn" data-id="${article.id}"><i data-lucide="trash-2" class="w-3 h-3"></i> Hapus</button></div></div>
+  `;
+  return div;
+}
+
 async function loadArticlesToTable() {
   const tbody = document.getElementById('articles-tbody');
   const mobileContainer = document.getElementById('articles-mobile-cards');
   const dashboardTbody = document.getElementById('dashboard-articles-tbody');
   const dashboardMobile = document.getElementById('dashboard-mobile-cards');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Memuat data...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Memuat data......</td></tr>';
   try {
     const q = query(collection(db, "articles"), orderBy("createdAt", "desc"));
     const snapshot = await getDocs(q);
@@ -98,36 +179,8 @@ async function loadArticlesToTable() {
     if (typeof lucide !== 'undefined') lucide.createIcons();
   } catch (error) {
     console.error('Error loading articles:', error);
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-600">Gagal memuat数据</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-600">Gagal memuat data</td></tr>';
   }
-}
-
-function createArticleRow(article) {
-  const tr = document.createElement('tr');
-  tr.className = 'hover:bg-slate-50 transition-colors';
-  const statusClass = { 'published': 'status-published', 'draft': 'status-draft', 'archived': 'status-archive' }[article.status] || 'status-draft';
-  const statusText = { 'published': 'Terbit', 'draft': 'Draft', 'archived': 'Arsip' }[article.status] || 'Draft';
-  tr.innerHTML = `
-    <td class="px-6 py-4"><p class="font-semibold text-slate-800 truncate max-w-xs">${escapeHtml(article.title)}</p><p class="text-xs text-slate-400 mt-1">${(article.views || 0).toLocaleString()} tayangan</p></td>
-    <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700">${escapeHtml(article.category || 'Umum')}</span></td>
-    <td class="px-6 py-4 text-sm text-slate-600">${escapeHtml(article.author || 'Admin')}</td>
-    <td class="px-6 py-4 text-sm text-slate-500">${formatDateID(article.createdAt)}</td>
-    <td class="px-6 py-4"><span class="status-badge ${statusClass}">${statusText}</span></td>
-    <td class="px-6 py-4 text-center"><div class="flex justify-center space-x-2"><button class="p-1.5 hover:bg-red-100 text-red-600 rounded transition edit-article-btn" data-id="${article.id}"><i data-lucide="edit" class="w-4 h-4"></i></button><button class="p-1.5 hover:bg-red-50 text-red-600 rounded transition delete-article-btn" data-id="${article.id}"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td>
-  `;
-  return tr;
-}
-
-function createArticleMobileCard(article) {
-  const div = document.createElement('div');
-  div.className = 'table-card-mobile';
-  const statusClass = { 'published': 'status-published', 'draft': 'status-draft', 'archived': 'status-archive' }[article.status] || 'status-draft';
-  const statusText = { 'published': 'Terbit', 'draft': 'Draft', 'archived': 'Arsip' }[article.status] || 'Draft';
-  div.innerHTML = `
-    <div class="table-card-header"><div class="flex justify-between items-start"><h4 class="font-semibold text-slate-800 text-sm truncate flex-1 pr-2">${escapeHtml(article.title)}</h4><span class="status-badge ${statusClass} flex-shrink-0">${statusText}</span></div></div>
-    <div class="table-card-body"><div class="table-card-row"><span class="table-card-label">Kategori</span><span class="table-card-value">${escapeHtml(article.category || 'Umum')}</span></div><div class="table-card-row"><span class="table-card-label">Penulis</span><span class="table-card-value">${escapeHtml(article.author || 'Admin')}</span></div><div class="table-card-row"><span class="table-card-label">Tanggal</span><span class="table-card-value">${formatDateID(article.createdAt)}</span></div><div class="table-card-row"><span class="table-card-label">Tayangan</span><span class="table-card-value">${(article.views || 0).toLocaleString()}</span></div><div class="pt-3 flex justify-between"><button class="flex-1 mr-2 bg-slate-100 text-slate-700 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1 edit-article-btn" data-id="${article.id}"><i data-lucide="edit" class="w-3 h-3"></i> Edit</button><button class="flex-1 ml-2 bg-red-50 text-red-600 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1 delete-article-btn" data-id="${article.id}"><i data-lucide="trash-2" class="w-3 h-3"></i> Hapus</button></div></div>
-  `;
-  return div;
 }
 
 async function loadModerationList() {
@@ -192,6 +245,7 @@ async function loadUsersList() {
 function setupEventListeners() {
   const form = document.getElementById('article-form');
   if (form) form.addEventListener('submit', async (e) => { e.preventDefault(); await handleSaveArticle(); });
+  
   document.addEventListener('click', async (e) => {
     const editBtn = e.target.closest('.edit-article-btn');
     if (editBtn) { const id = editBtn.dataset.id; await handleEditArticle(id); }
@@ -200,20 +254,120 @@ function setupEventListeners() {
     const reviewBtn = e.target.closest('.review-article-btn');
     if (reviewBtn) { const id = reviewBtn.dataset.id; await showModerationDetail(id); }
   });
+  
   const createBtn = document.getElementById('create-new-article-btn');
-  if (createBtn) createBtn.addEventListener('click', () => { currentEditId = null; document.getElementById('article-list-view').classList.add('hidden'); document.getElementById('create-article-form').classList.remove('hidden'); document.getElementById('article-id').value = ''; document.getElementById('article-title').value = ''; document.getElementById('article-content').value = ''; document.getElementById('article-status').value = 'draft'; document.getElementById('form-title').textContent = 'Tulis Artikel Baru'; document.getElementById('submit-btn-text').textContent = 'Terbitkan'; });
+  if (createBtn) createBtn.addEventListener('click', () => { 
+    currentEditId = null; 
+    document.getElementById('article-list-view').classList.add('hidden'); 
+    document.getElementById('create-article-form').classList.remove('hidden'); 
+    document.getElementById('article-id').value = ''; 
+    document.getElementById('article-title').value = ''; 
+    document.getElementById('article-content').value = ''; 
+    document.getElementById('article-status').value = 'draft'; 
+    document.getElementById('form-title').textContent = 'Tulis Artikel Baru'; 
+    document.getElementById('submit-btn-text').textContent = 'Terbitkan';
+    document.getElementById('article-preview-panel')?.classList.add('hidden');
+  });
+  
   const backBtn = document.getElementById('back-to-articles-btn');
-  if (backBtn) backBtn.addEventListener('click', () => { document.getElementById('create-article-form').classList.add('hidden'); document.getElementById('article-list-view').classList.remove('hidden'); loadArticlesToTable(); });
+  if (backBtn) backBtn.addEventListener('click', () => { 
+    document.getElementById('create-article-form').classList.add('hidden'); 
+    document.getElementById('article-list-view').classList.remove('hidden'); 
+    loadArticlesToTable(); 
+  });
+  
   const backModBtn = document.getElementById('back-to-moderation-btn');
-  if (backModBtn) backModBtn.addEventListener('click', () => { document.getElementById('moderation-detail-view').classList.add('hidden'); document.getElementById('moderation-list-view').classList.remove('hidden'); loadModerationList(); });
+  if (backModBtn) backModBtn.addEventListener('click', () => { 
+    document.getElementById('moderation-detail-view').classList.add('hidden'); 
+    document.getElementById('moderation-list-view').classList.remove('hidden'); 
+    loadModerationList(); 
+  });
+  
   const approveBtn = document.getElementById('approve-article-btn');
-  if (approveBtn) approveBtn.addEventListener('click', async () => { const articleId = document.getElementById('moderation-article-id')?.value; if (articleId) { await updateDoc(doc(db, "articles", articleId), { status: 'published' }); showToast('Artikel berhasil disetujui dan diterbitkan'); document.getElementById('moderation-detail-view').classList.add('hidden'); document.getElementById('moderation-list-view').classList.remove('hidden'); loadModerationList(); loadArticlesToTable(); } });
+  if (approveBtn) approveBtn.addEventListener('click', async () => { 
+    const articleId = document.getElementById('moderation-article-id')?.value; 
+    if (articleId) { 
+      await updateDoc(doc(db, "articles", articleId), { status: 'published' }); 
+      showToast('Artikel berhasil disetujui dan diterbitkan'); 
+      document.getElementById('moderation-detail-view').classList.add('hidden'); 
+      document.getElementById('moderation-list-view').classList.remove('hidden'); 
+      loadModerationList(); 
+      loadArticlesToTable(); 
+      loadDashboardStats();
+    } 
+  });
+  
   const rejectBtn = document.getElementById('reject-article-btn');
-  if (rejectBtn) rejectBtn.addEventListener('click', async () => { const articleId = document.getElementById('moderation-article-id')?.value; if (articleId && confirm('Tolak artikel ini?')) { await deleteDoc(doc(db, "articles", articleId)); showToast('Artikel telah ditolak dan dihapus'); document.getElementById('moderation-detail-view').classList.add('hidden'); document.getElementById('moderation-list-view').classList.remove('hidden'); loadModerationList(); loadArticlesToTable(); } });
+  if (rejectBtn) rejectBtn.addEventListener('click', async () => { 
+    const articleId = document.getElementById('moderation-article-id')?.value; 
+    if (articleId && confirm('Tolak artikel ini?')) { 
+      await deleteDoc(doc(db, "articles", articleId)); 
+      showToast('Artikel telah ditolak dan dihapus'); 
+      document.getElementById('moderation-detail-view').classList.add('hidden'); 
+      document.getElementById('moderation-list-view').classList.remove('hidden'); 
+      loadModerationList(); 
+      loadArticlesToTable(); 
+      loadDashboardStats();
+    } 
+  });
+  
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) logoutBtn.addEventListener('click', async () => { if (confirm('Yakin ingin keluar?')) await logoutAdmin(); });
+  
   const filterBtns = document.querySelectorAll('.article-filter-btn');
   filterBtns.forEach(btn => { btn.addEventListener('click', () => filterArticles(btn.dataset.filter)); });
+  
+  // Editor toolbar handlers
+  document.querySelectorAll('[data-format]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const textarea = document.getElementById('article-content');
+      const format = btn.dataset.format;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selected = textarea.value.substring(start, end);
+      let wrapper = { bold: ['**', '**'], italic: ['*', '*'], h2: ['## ', ''], p: ['', ''] }[format] || ['', ''];
+      textarea.value = textarea.value.substring(0, start) + wrapper[0] + selected + wrapper[1] + textarea.value.substring(end);
+      textarea.focus();
+    });
+  });
+  
+  // Preview toggle
+  const previewToggle = document.getElementById('preview-toggle-btn');
+  if (previewToggle) {
+    previewToggle.addEventListener('click', () => {
+      const panel = document.getElementById('article-preview-panel');
+      const title = document.getElementById('article-title').value;
+      const content = document.getElementById('article-content').value;
+      document.getElementById('preview-title').textContent = title || 'Judul artikel...';
+      document.getElementById('preview-content').innerHTML = content.split('\n\n').map(p => `<p>${escapeHtml(p.trim())}</p>`).join('');
+      panel.classList.toggle('hidden');
+    });
+  }
+  
+  // Insert image
+  const insertImageBtn = document.getElementById('insert-image-btn');
+  if (insertImageBtn) {
+    insertImageBtn.addEventListener('click', () => {
+      const url = prompt('Masukkan URL gambar:');
+      if (url) {
+        const textarea = document.getElementById('article-content');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        textarea.value = textarea.value.substring(0, start) + `![Gambar](${url})` + textarea.value.substring(end);
+        textarea.focus();
+      }
+    });
+  }
+  
+  // Auto-generate URL slug from title
+  const titleInput = document.getElementById('article-title');
+  const urlSlugSpan = document.getElementById('url-slug');
+  if (titleInput && urlSlugSpan) {
+    titleInput.addEventListener('input', () => {
+      const slug = titleInput.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      urlSlugSpan.textContent = slug || 'judul-artikel';
+    });
+  }
 }
 
 async function filterArticles(filter) {
@@ -275,6 +429,13 @@ async function handleEditArticle(id) {
       document.getElementById('submit-btn-text').textContent = 'Perbarui';
       document.getElementById('article-list-view').classList.add('hidden');
       document.getElementById('create-article-form').classList.remove('hidden');
+      document.getElementById('article-preview-panel')?.classList.add('hidden');
+      // Trigger slug generation
+      const urlSlugSpan = document.getElementById('url-slug');
+      if (urlSlugSpan && article.title) {
+        const slug = article.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        urlSlugSpan.textContent = slug;
+      }
     }
   } catch (error) { console.error('Error loading article for edit:', error); showToast('Gagal memuat artikel', 'error'); }
 }
