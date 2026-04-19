@@ -147,10 +147,11 @@ function renderLatestNews(articles) {
 }
 
 window.navigateTo = function(page) {
-  const mobileMenu = document.getElementById('mobile-menu');
-  if (mobileMenu) mobileMenu.classList.add('hidden');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  renderView(page);
+    if (typeof window.closeMobileMenu === 'function') {
+        window.closeMobileMenu();
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    renderView(page);
 };
 
 async function renderView(page) {
@@ -400,15 +401,45 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const mobileBtn = document.getElementById('mobile-menu-btn');
+  const closeBtn = document.getElementById('close-menu-btn');
   const mobileMenu = document.getElementById('mobile-menu');
-  if (mobileBtn && mobileMenu) {
-    mobileBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
-    document.addEventListener('click', (e) => {
-      if (!mobileMenu.contains(e.target) && !mobileBtn.contains(e.target) && !mobileMenu.classList.contains('hidden')) {
-        mobileMenu.classList.add('hidden');
-      }
-    });
-  }
+  const overlay = document.getElementById('mobile-overlay');
+
+  window.openMobileMenu = function() {
+    if (!mobileMenu || !overlay) return;
+    
+    overlay.classList.remove('hidden', 'pointer-events-none');
+    setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+    
+    mobileMenu.classList.remove('translate-x-full');
+    
+    document.body.classList.add('overflow-hidden');
+    
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  };
+
+  window.closeMobileMenu = function() {
+    if (!mobileMenu || !overlay) return;
+    
+    mobileMenu.classList.add('translate-x-full');
+    
+    overlay.classList.add('opacity-0');
+    
+    setTimeout(() => {
+        overlay.classList.add('hidden', 'pointer-events-none');
+        document.body.classList.remove('overflow-hidden');
+    }, 300);
+  };
+
+  if (mobileBtn) mobileBtn.addEventListener('click', window.openMobileMenu);
+  if (closeBtn) closeBtn.addEventListener('click', window.closeMobileMenu);
+  if (overlay) overlay.addEventListener('click', window.closeMobileMenu);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !mobileMenu?.classList.contains('translate-x-full')) {
+        window.closeMobileMenu();
+    }
+  });
 
   initSearchLogic();
   window.navigateTo('beranda');
