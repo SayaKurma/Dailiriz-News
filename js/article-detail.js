@@ -114,8 +114,14 @@ async function loadArticle() {
     }
     const contentEl = document.getElementById('article-content');
     if (contentEl && currentArticle.content) {
-      const paragraphs = currentArticle.content.split('\n\n').filter(p => p.trim());
-      contentEl.innerHTML = paragraphs.map(p => `<p>${escapeHtml(p.trim())}</p>`).join('');
+      const cleanHTML = typeof DOMPurify !== 'undefined' 
+        ? DOMPurify.sanitize(currentArticle.content, {
+            ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'i', 'b', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'blockquote', 'img', 'a', 'hr', 'code', 'pre'],
+            ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'style']
+          })
+        : currentArticle.content;
+      contentEl.innerHTML = cleanHTML;
+      contentEl.classList.add('prose', 'prose-lg', 'max-w-none', 'prose-slate', 'prose-a:text-red-600', 'prose-img:rounded-lg');
     }
     updateMetaTags(currentArticle);
     await loadRelatedArticles(currentArticle.category, currentArticle.id);
@@ -140,9 +146,12 @@ async function loadRelatedArticles(category, currentId) {
     snapshot.forEach(docSnap => {
       if (docSnap.id === currentId || count >= 3) return;
       const article = { id: docSnap.id, ...docSnap.data() };
+      const desc = article.description 
+        ? (typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(article.description, { ALLOWED_TAGS: [] }) : article.description)
+        : '';
       const card = document.createElement('article');
       card.className = 'bg-white rounded-lg shadow-sm hover:shadow-lg transition duration-300 overflow-hidden group cursor-pointer';
-      card.innerHTML = `<div class="h-40 md:h-48 overflow-hidden"><img src="${article.image || DEFAULT_IMAGE}" class="w-full h-full object-cover transform group-hover:scale-110 transition duration-500" alt="${article.title}" loading="lazy"></div><div class="p-3 md:p-4"><span class="text-xs font-bold text-red-600 uppercase">${article.category}</span><h4 class="font-serif font-bold text-base md:text-lg mt-1 md:mt-2 mb-1 md:mb-2 leading-snug group-hover:text-red-700 line-clamp-2">${article.title}</h4><p class="text-slate-600 text-xs md:text-sm line-clamp-2 md:line-clamp-3">${article.description || ''}</p></div>`;
+      card.innerHTML = `<div class="h-40 md:h-48 overflow-hidden"><img src="${article.image || DEFAULT_IMAGE}" class="w-full h-full object-cover transform group-hover:scale-110 transition duration-500" alt="${article.title}" loading="lazy"></div><div class="p-3 md:p-4"><span class="text-xs font-bold text-red-600 uppercase">${article.category}</span><h4 class="font-serif font-bold text-base md:text-lg mt-1 md:mt-2 mb-1 md:mb-2 leading-snug group-hover:text-red-700 line-clamp-2">${article.title}</h4><p class="text-slate-600 text-xs md:text-sm line-clamp-2 md:line-clamp-3">${desc}</p></div>`;
       card.addEventListener('click', () => { window.location.href = `article.html?id=${article.id}`; });
       container.appendChild(card);
       count++;
@@ -226,9 +235,9 @@ function initSearchModal() {
   const modal = document.getElementById('search-modal');
   const input = document.getElementById('search-input');
   const resultsContainer = document.getElementById('search-results-list');
-  
+
   if (!searchBtn || !modal || !input) return;
-  
+
   searchBtn.onclick = (e) => {
     e.preventDefault();
     modal.classList.remove('hidden');
@@ -236,7 +245,7 @@ function initSearchModal() {
     input.focus();
     if (typeof lucide !== 'undefined') lucide.createIcons();
   };
-  
+
   document.getElementById('close-search')?.addEventListener('click', () => {
     modal.classList.add('hidden');
     modal.classList.remove('flex');
@@ -245,21 +254,21 @@ function initSearchModal() {
       resultsContainer.innerHTML = '<p class="text-slate-400 text-sm text-center py-8">Ketik minimal 2 karakter untuk mencari...</p>';
     }
   });
-  
+
   modal.addEventListener('click', (e) => {
     if (e.target === modal) {
       modal.classList.add('hidden');
       modal.classList.remove('flex');
     }
   });
-  
+
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
       modal.classList.add('hidden');
       modal.classList.remove('flex');
     }
   });
-  
+
   function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -271,7 +280,7 @@ function initSearchModal() {
       timeout = setTimeout(later, wait);
     };
   }
-  
+
   const performSearch = () => {
     const keyword = input.value.toLowerCase().trim();
     if (keyword.length < 2) {
@@ -284,7 +293,7 @@ function initSearchModal() {
       resultsContainer.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">Fitur pencarian lengkap tersedia di halaman utama.</p>`;
     }
   };
-  
+
   input.addEventListener('input', debounce(performSearch, 300));
 }
 
@@ -294,16 +303,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     dateEl.textContent = new Date().toLocaleDateString('id-ID', options);
   }
-  
+
   loadArticle();
-  
+
   if (typeof lucide !== 'undefined') {
     lucide.createIcons();
   }
-  
+
   const submitBtn = document.getElementById('submit-comment');
   if (submitBtn) submitBtn.addEventListener('click', submitComment);
-  
+
   const shareFunction = () => {
     if (navigator.share && currentArticle) {
       navigator.share({ title: currentArticle.title, text: currentArticle.description || '', url: window.location.href });
@@ -312,12 +321,12 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast('Link berhasil disalin!');
     }
   };
-  
+
   const shareBtn = document.getElementById('share-btn');
   const mobileShareBtn = document.getElementById('mobile-share-btn');
   if (shareBtn) shareBtn.addEventListener('click', shareFunction);
   if (mobileShareBtn) mobileShareBtn.addEventListener('click', shareFunction);
-  
+
   document.querySelectorAll('.share-buttons button').forEach(btn => {
     btn.addEventListener('click', function() {
       if (this.textContent.includes('Salin')) {
@@ -328,11 +337,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
-  
+
   const mobileMenuBtn = document.getElementById('mobile-menu-btn');
   const mobileMenu = document.getElementById('mobile-menu');
   const overlay = document.getElementById('mobile-overlay');
-  
+
   if (mobileMenuBtn && mobileMenu) {
     mobileMenuBtn.addEventListener('click', () => {
       mobileMenu.classList.remove('translate-x-full');
@@ -344,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (typeof lucide !== 'undefined') lucide.createIcons();
     });
   }
-  
+
   if (document.getElementById('close-menu-btn')) {
     document.getElementById('close-menu-btn').addEventListener('click', () => {
       if (mobileMenu) mobileMenu.classList.add('translate-x-full');
@@ -355,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 300);
     });
   }
-  
+
   if (overlay) {
     overlay.addEventListener('click', () => {
       if (mobileMenu) mobileMenu.classList.add('translate-x-full');
@@ -366,6 +375,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 300);
     });
   }
-  
+
   initSearchModal();
 });
