@@ -267,6 +267,7 @@ function setupEventListeners() {
     document.getElementById('form-title').textContent = 'Tulis Artikel Baru'; 
     document.getElementById('submit-btn-text').textContent = 'Terbitkan';
     document.getElementById('article-preview-panel')?.classList.add('hidden');
+    setTimeout(() => initTinyMCE(), 100);
   });
 
   const backBtn = document.getElementById('back-to-articles-btn');
@@ -317,45 +318,6 @@ function setupEventListeners() {
   const filterBtns = document.querySelectorAll('.article-filter-btn');
   filterBtns.forEach(btn => { btn.addEventListener('click', () => filterArticles(btn.dataset.filter)); });
 
-  document.querySelectorAll('[data-format]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const textarea = document.getElementById('article-content');
-      const format = btn.dataset.format;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const selected = textarea.value.substring(start, end);
-      let wrapper = { bold: ['**', '**'], italic: ['*', '*'], h2: ['## ', ''], p: ['', ''] }[format] || ['', ''];
-      textarea.value = textarea.value.substring(0, start) + wrapper[0] + selected + wrapper[1] + textarea.value.substring(end);
-      textarea.focus();
-    });
-  });
-
-  const previewToggle = document.getElementById('preview-toggle-btn');
-  if (previewToggle) {
-    previewToggle.addEventListener('click', () => {
-      const panel = document.getElementById('article-preview-panel');
-      const title = document.getElementById('article-title').value;
-      const content = document.getElementById('article-content').value;
-      document.getElementById('preview-title').textContent = title || 'Judul artikel...';
-      document.getElementById('preview-content').innerHTML = content.split('\n\n').map(p => `<p>${escapeHtml(p.trim())}</p>`).join('');
-      panel.classList.toggle('hidden');
-    });
-  }
-
-  const insertImageBtn = document.getElementById('insert-image-btn');
-  if (insertImageBtn) {
-    insertImageBtn.addEventListener('click', () => {
-      const url = prompt('Masukkan URL gambar:');
-      if (url) {
-        const textarea = document.getElementById('article-content');
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        textarea.value = textarea.value.substring(0, start) + `![Gambar](${url})` + textarea.value.substring(end);
-        textarea.focus();
-      }
-    });
-  }
-
   const titleInput = document.getElementById('article-title');
   const urlSlugSpan = document.getElementById('url-slug');
   if (titleInput && urlSlugSpan) {
@@ -387,25 +349,31 @@ async function filterArticles(filter) {
 
 async function handleSaveArticle() {
   const title = document.getElementById('article-title')?.value.trim();
-  const content = document.getElementById('article-content')?.value.trim();
+  const rawContent = document.getElementById('article-content')?.value.trim() || '';
+  const cleanContent = typeof DOMPurify !== 'undefined' 
+    ? DOMPurify.sanitize(rawContent, {
+        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'i', 'b', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'blockquote', 'img', 'a', 'hr', 'code', 'pre'],
+        ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'style']
+      })
+    : rawContent;
   const categoryRadio = document.querySelector('input[name="category"]:checked');
   const category = categoryRadio?.value;
   const status = document.getElementById('article-status')?.value || 'draft';
   const image = document.getElementById('article-image-url')?.value.trim() || 'https://via.placeholder.com/800x400';
   const imageCaption = document.getElementById('article-image-caption')?.value.trim() || '';
-  
+
   const authorInput = document.getElementById('input-author')?.value.trim();
   const imageSourceInput = document.getElementById('input-image-source')?.value.trim();
 
-  const description = content?.substring(0, 200) || '';
-  if (!title || !content || !category) { showToast('Judul, konten, dan kategori wajib diisi', 'error'); return; }
+  const description = cleanContent?.substring(0, 200).replace(/<[^>]*>/g, '') || '';
+  if (!title || !cleanContent || !category) { showToast('Judul, konten, dan kategori wajib diisi', 'error'); return; }
 
   try {
     const finalAuthor = authorInput || currentUser?.email?.split('@')[0] || 'Admin';
-    
+
     const articleData = {
       title,
-      content,
+      content: cleanContent,
       description,
       category,
       status,
@@ -426,7 +394,7 @@ async function handleSaveArticle() {
       await addDoc(collection(db, "articles"), articleData); 
       showToast('Artikel berhasil diterbitkan!'); 
     }
-    
+
     document.getElementById('article-form')?.reset();
     document.getElementById('create-article-form').classList.add('hidden');
     document.getElementById('article-list-view').classList.remove('hidden');
@@ -465,6 +433,13 @@ async function handleEditArticle(id) {
         const slug = article.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         urlSlugSpan.textContent = slug;
       }
+      setTimeout(() => {
+        initTinyMCE();
+        const editor = tinymce.get('article-content');
+        if (editor && article.content) {
+          editor.setContent(article.content);
+        }
+      }, 100);
     }
   } catch (error) { console.error('Error loading article for edit:', error); showToast('Gagal memuat artikel', 'error'); }
 }
@@ -486,9 +461,17 @@ async function showModerationDetail(articleId) {
       document.getElementById('detail-title').textContent = article.title || '';
       document.getElementById('detail-author').textContent = article.author || 'Anonim';
       document.getElementById('detail-date').textContent = formatDateID(article.createdAt);
-      document.getElementById('detail-excerpt').textContent = article.description || article.content?.substring(0, 200) || '';
+      document.getElementById('detail-excerpt').textContent = article.description || article.content?.substring(0, 200)?.replace(/<[^>]*>/g, '') || '';
       const contentDiv = document.getElementById('detail-full-content');
-      if (contentDiv && article.content) contentDiv.innerHTML = article.content.split('\n\n').map(p => `<p>${escapeHtml(p)}</p>`).join('');
+      if (contentDiv && article.content) {
+        const cleanHTML = typeof DOMPurify !== 'undefined' 
+          ? DOMPurify.sanitize(article.content, {
+              ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'i', 'b', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'blockquote', 'img', 'a', 'hr', 'code', 'pre'],
+              ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'style']
+            })
+          : article.content;
+        contentDiv.innerHTML = cleanHTML;
+      }
       document.getElementById('moderation-list-view').classList.add('hidden');
       document.getElementById('moderation-detail-view').classList.remove('hidden');
     }
