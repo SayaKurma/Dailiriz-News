@@ -41,7 +41,7 @@ async function loadDashboardStats() {
     if (articlesEl) articlesEl.textContent = publishedCount;
     if (draftEl) draftEl.textContent = draftCount;
     if (articleBadge) articleBadge.textContent = publishedCount;
-    
+
     const chartCtx = document.getElementById('analyticsChart');
     if (chartCtx) {
       if (analyticsChartInstance) analyticsChartInstance.destroy();
@@ -245,7 +245,7 @@ async function loadUsersList() {
 function setupEventListeners() {
   const form = document.getElementById('article-form');
   if (form) form.addEventListener('submit', async (e) => { e.preventDefault(); await handleSaveArticle(); });
-  
+
   document.addEventListener('click', async (e) => {
     const editBtn = e.target.closest('.edit-article-btn');
     if (editBtn) { const id = editBtn.dataset.id; await handleEditArticle(id); }
@@ -254,7 +254,7 @@ function setupEventListeners() {
     const reviewBtn = e.target.closest('.review-article-btn');
     if (reviewBtn) { const id = reviewBtn.dataset.id; await showModerationDetail(id); }
   });
-  
+
   const createBtn = document.getElementById('create-new-article-btn');
   if (createBtn) createBtn.addEventListener('click', () => { 
     currentEditId = null; 
@@ -268,21 +268,21 @@ function setupEventListeners() {
     document.getElementById('submit-btn-text').textContent = 'Terbitkan';
     document.getElementById('article-preview-panel')?.classList.add('hidden');
   });
-  
+
   const backBtn = document.getElementById('back-to-articles-btn');
   if (backBtn) backBtn.addEventListener('click', () => { 
     document.getElementById('create-article-form').classList.add('hidden'); 
     document.getElementById('article-list-view').classList.remove('hidden'); 
     loadArticlesToTable(); 
   });
-  
+
   const backModBtn = document.getElementById('back-to-moderation-btn');
   if (backModBtn) backModBtn.addEventListener('click', () => { 
     document.getElementById('moderation-detail-view').classList.add('hidden'); 
     document.getElementById('moderation-list-view').classList.remove('hidden'); 
     loadModerationList(); 
   });
-  
+
   const approveBtn = document.getElementById('approve-article-btn');
   if (approveBtn) approveBtn.addEventListener('click', async () => { 
     const articleId = document.getElementById('moderation-article-id')?.value; 
@@ -296,7 +296,7 @@ function setupEventListeners() {
       loadDashboardStats();
     } 
   });
-  
+
   const rejectBtn = document.getElementById('reject-article-btn');
   if (rejectBtn) rejectBtn.addEventListener('click', async () => { 
     const articleId = document.getElementById('moderation-article-id')?.value; 
@@ -310,14 +310,13 @@ function setupEventListeners() {
       loadDashboardStats();
     } 
   });
-  
+
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) logoutBtn.addEventListener('click', async () => { if (confirm('Yakin ingin keluar?')) await logoutAdmin(); });
-  
+
   const filterBtns = document.querySelectorAll('.article-filter-btn');
   filterBtns.forEach(btn => { btn.addEventListener('click', () => filterArticles(btn.dataset.filter)); });
-  
-  // Editor toolbar handlers
+
   document.querySelectorAll('[data-format]').forEach(btn => {
     btn.addEventListener('click', () => {
       const textarea = document.getElementById('article-content');
@@ -330,8 +329,7 @@ function setupEventListeners() {
       textarea.focus();
     });
   });
-  
-  // Preview toggle
+
   const previewToggle = document.getElementById('preview-toggle-btn');
   if (previewToggle) {
     previewToggle.addEventListener('click', () => {
@@ -343,8 +341,7 @@ function setupEventListeners() {
       panel.classList.toggle('hidden');
     });
   }
-  
-  // Insert image
+
   const insertImageBtn = document.getElementById('insert-image-btn');
   if (insertImageBtn) {
     insertImageBtn.addEventListener('click', () => {
@@ -358,8 +355,7 @@ function setupEventListeners() {
       }
     });
   }
-  
-  // Auto-generate URL slug from title
+
   const titleInput = document.getElementById('article-title');
   const urlSlugSpan = document.getElementById('url-slug');
   if (titleInput && urlSlugSpan) {
@@ -397,30 +393,49 @@ async function handleSaveArticle() {
   const status = document.getElementById('article-status')?.value || 'draft';
   const image = document.getElementById('article-image-url')?.value.trim() || 'https://via.placeholder.com/800x400';
   const imageCaption = document.getElementById('article-image-caption')?.value.trim() || '';
+  
+  const authorInput = document.getElementById('input-author')?.value.trim();
+  const imageSourceInput = document.getElementById('input-image-source')?.value.trim();
+
   const description = content?.substring(0, 200) || '';
   if (!title || !content || !category) { showToast('Judul, konten, dan kategori wajib diisi', 'error'); return; }
+
   try {
-    const articleData = { 
-      title, 
-      content, 
-      description, 
-      category, 
-      status, 
-      image, 
+    const finalAuthor = authorInput || currentUser?.email?.split('@')[0] || 'Admin';
+    
+    const articleData = {
+      title,
+      content,
+      description,
+      category,
+      status,
+      image,
       imageCaption,
-      author: currentUser?.email || 'Admin', 
-      updatedAt: serverTimestamp(), 
-      views: 0 
+      imageSource: imageSourceInput || '',
+      author: finalAuthor,
+      updatedAt: serverTimestamp(),
+      views: 0
     };
+
     const articleId = document.getElementById('article-id')?.value;
-    if (articleId) { await updateDoc(doc(db, "articles", articleId), articleData); showToast('Artikel berhasil diperbarui!'); }
-    else { articleData.createdAt = serverTimestamp(); await addDoc(collection(db, "articles"), articleData); showToast('Artikel berhasil diterbitkan!'); }
+    if (articleId) { 
+      await updateDoc(doc(db, "articles", articleId), articleData); 
+      showToast('Artikel berhasil diperbarui!'); 
+    } else { 
+      articleData.createdAt = serverTimestamp(); 
+      await addDoc(collection(db, "articles"), articleData); 
+      showToast('Artikel berhasil diterbitkan!'); 
+    }
+    
     document.getElementById('article-form')?.reset();
     document.getElementById('create-article-form').classList.add('hidden');
     document.getElementById('article-list-view').classList.remove('hidden');
     await loadArticlesToTable();
     await loadDashboardStats();
-  } catch (error) { console.error('Error saving article:', error); showToast('Gagal menyimpan artikel', 'error'); }
+  } catch (error) { 
+    console.error('Error saving article:', error); 
+    showToast('Gagal menyimpan artikel', 'error'); 
+  }
 }
 
 async function handleEditArticle(id) {
@@ -436,6 +451,8 @@ async function handleEditArticle(id) {
       document.getElementById('article-status').value = article.status || 'draft';
       document.getElementById('article-image-url').value = article.image || '';
       document.getElementById('article-image-caption').value = article.imageCaption || '';
+      document.getElementById('input-author').value = article.author || '';
+      document.getElementById('input-image-source').value = article.imageSource || '';
       const categoryRadios = document.querySelectorAll('input[name="category"]');
       categoryRadios.forEach(radio => { if (radio.value === article.category) radio.checked = true; });
       document.getElementById('form-title').textContent = 'Edit Artikel';
@@ -443,7 +460,6 @@ async function handleEditArticle(id) {
       document.getElementById('article-list-view').classList.add('hidden');
       document.getElementById('create-article-form').classList.remove('hidden');
       document.getElementById('article-preview-panel')?.classList.add('hidden');
-      // Trigger slug generation
       const urlSlugSpan = document.getElementById('url-slug');
       if (urlSlugSpan && article.title) {
         const slug = article.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
