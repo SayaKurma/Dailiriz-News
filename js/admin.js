@@ -267,7 +267,13 @@ function setupEventListeners() {
     document.getElementById('form-title').textContent = 'Tulis Artikel Baru'; 
     document.getElementById('submit-btn-text').textContent = 'Terbitkan';
     document.getElementById('article-preview-panel')?.classList.add('hidden');
-    setTimeout(() => initTinyMCE(), 100);
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            if (typeof window.initTinyMCE === 'function') {
+                window.initTinyMCE();
+            }
+        }, 150);
+    });
   });
 
   const backBtn = document.getElementById('back-to-articles-btn');
@@ -433,13 +439,19 @@ async function handleEditArticle(id) {
         const slug = article.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         urlSlugSpan.textContent = slug;
       }
-      setTimeout(() => {
-        initTinyMCE();
-        const editor = tinymce.get('article-content');
-        if (editor && article.content) {
-          editor.setContent(article.content);
-        }
-      }, 100);
+      requestAnimationFrame(() => {
+          setTimeout(() => {
+              if (typeof window.initTinyMCE === 'function') {
+                  window.initTinyMCE();
+              }
+              setTimeout(() => {
+                  const editor = tinymce.get('article-content');
+                  if (editor && article.content) {
+                      editor.setContent(article.content);
+                  }
+              }, 100);
+          }, 150);
+      });
     }
   } catch (error) { console.error('Error loading article for edit:', error); showToast('Gagal memuat artikel', 'error'); }
 }
