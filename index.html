@@ -75,144 +75,11 @@
     </style>  
 </head>  
 <body class="bg-stone-50 text-slate-800 flex flex-col min-h-screen">  
-    <div class="bg-slate-900 text-slate-300 py-1 text-xs">  
-        <div class="container mx-auto px-4 flex justify-between items-center">  
-            <span id="current-date"></span>  
-            <div class="flex gap-4">  
-                <a href="#" class="hover:text-white">Edisi Digital</a>  
-                <a href="#" class="hover:text-white">Langganan</a>  
-            </div>  
-        </div>  
-    </div>  
-
-    <header class="bg-gradient-to-r from-red-900 via-red-600 to-amber-400 shadow-lg sticky top-0 z-50">  
-        <div class="container mx-auto px-4">  
-            <div class="flex justify-between items-center py-4">  
-                <div class="flex items-center gap-2">  
-                    <i data-lucide="newspaper" class="text-white w-8 h-8"></i>  
-                    <h1 class="font-serif text-2xl md:text-3xl font-bold text-white tracking-wide">  
-                        Daili<span class="text-amber-200 italic">Riz</span>  
-                    </h1>  
-                </div>  
-                <nav class="hidden md:flex space-x-6 text-white font-medium text-sm tracking-wider">  
-                    <a href="javascript:void(0)" onclick="window.navigateTo('beranda')" class="hover:text-amber-200 transition-colors border-b-2 border-transparent hover:border-amber-200 pb-1">BERANDA</a>  
-                    <a href="javascript:void(0)" onclick="window.navigateTo('news')" class="hover:text-amber-200 transition-colors border-b-2 border-transparent hover:border-amber-200 pb-1">NEWS</a>  
-                    <a href="javascript:void(0)" onclick="window.navigateTo('feature')" class="hover:text-amber-200 transition-colors border-b-2 border-transparent hover:border-amber-200 pb-1">FEATURE</a>  
-                    <a href="javascript:void(0)" onclick="window.navigateTo('opini')" class="hover:text-amber-200 transition-colors border-b-2 border-transparent hover:border-amber-200 pb-1">OPINI</a>  
-                    <a href="javascript:void(0)" onclick="window.navigateTo('cek-fakta')" class="hover:text-amber-200 transition-colors border-b-2 border-transparent hover:border-amber-200 pb-1">CEK FAKTA</a>  
-                </nav>  
-                <div class="flex items-center gap-4">  
-                    <button id="search-btn" class="text-white hover:text-amber-200 transition">  
-                        <i data-lucide="search" class="w-5 h-5"></i>  
-                    </button>  
-                    <button id="mobile-menu-btn" class="md:hidden text-white">  
-                        <i data-lucide="menu" class="w-6 h-6"></i>  
-                    </button>  
-                </div>  
-            </div>  
-        </div>  
-        <div id="mobile-overlay" class="fixed inset-0 bg-black/60 z-40 hidden opacity-0 transition-opacity duration-300 pointer-events-none"></div>  
-        <div id="mobile-menu" class="fixed top-0 right-0 h-full w-64 bg-gradient-to-b from-red-900 to-red-800 z-50 transform translate-x-full transition-transform duration-300 ease-in-out shadow-2xl flex flex-col md:hidden">  
-            <div class="flex justify-between items-center p-5 border-b border-red-700/50">  
-                <div class="flex items-center gap-2">  
-                    <i data-lucide="newspaper" class="text-white w-6 h-6"></i>  
-                    <span class="font-serif text-xl font-bold text-white tracking-wide">Daili<span class="text-amber-200 italic">Riz</span></span>  
-                </div>  
-                <button id="close-menu-btn" class="text-white hover:text-amber-200 transition-colors p-1">  
-                    <i data-lucide="x" class="w-6 h-6"></i>  
-                </button>  
-            </div>  
-            <nav class="flex flex-col p-5 space-y-4 text-white font-medium overflow-y-auto flex-1">  
-                <a href="javascript:void(0)" onclick="window.navigateTo('beranda')" class="hover:text-amber-300 transition flex items-center gap-3 py-2">  
-                    <i data-lucide="home" class="w-4 h-4"></i> Beranda  
-                </a>  
-                <a href="javascript:void(0)" onclick="window.navigateTo('news')" class="hover:text-amber-300 transition flex items-center gap-3 py-2">  
-                    <i data-lucide="globe" class="w-4 h-4"></i> News  
-                </a>  
-                <a href="javascript:void(0)" onclick="window.navigateTo('feature')" class="hover:text-amber-300 transition flex items-center gap-3 py-2">  
-                    <i data-lucide="star" class="w-4 h-4"></i> Feature  
-                </a>  
-                <a href="javascript:void(0)" onclick="window.navigateTo('opini')" class="hover:text-amber-300 transition flex items-center gap-3 py-2">  
-                    <i data-lucide="pen-tool" class="w-4 h-4"></i> Opini  
-                </a>  
-                <a href="javascript:void(0)" onclick="window.navigateTo('cek-fakta')" class="hover:text-amber-300 transition flex items-center gap-3 py-2">  
-                    <i data-lucide="shield-check" class="w-4 h-4"></i> Cek Fakta  
-                </a>  
-            </nav>  
-            <div class="p-5 border-t border-red-700/50 text-xs text-red-200">  
-                &copy; 2026 Dailiriz  
-            </div>  
-        </div>  
-    </header>  
+    <div id="layout-header"></div>
 
     <main id="spa-container" class="container mx-auto px-4 py-8 flex-grow"></main>  
 
-    <footer class="bg-gradient-to-r from-red-900 via-red-600 to-amber-400 text-white pt-16 pb-8 mt-auto">  
-        <div class="container mx-auto px-4">  
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">  
-                <div class="space-y-4">  
-                    <div class="flex items-center gap-2 mb-4">  
-                        <i data-lucide="newspaper" class="text-white w-8 h-8"></i>  
-                        <h2 class="font-serif text-2xl font-bold tracking-wide">  
-                            Daili<span class="text-amber-200 italic">Riz</span>  
-                        </h2>  
-                    </div>  
-                    <p class="text-red-100 text-sm leading-relaxed">  
-                        Menyajikan berita terpercaya, tajam, dan berimbang dari seluruh pelosok negeri untuk membangun wawasan bangsa.  
-                    </p>  
-                    <div class="flex gap-4 mt-4">  
-                        <a href="#" class="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition"><i data-lucide="facebook" class="w-4 h-4"></i></a>  
-                        <a href="#" class="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition"><i data-lucide="twitter" class="w-4 h-4"></i></a>  
-                        <a href="#" class="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition"><i data-lucide="instagram" class="w-4 h-4"></i></a>  
-                    </div>  
-                </div>  
-                <div>  
-                    <h3 class="font-bold text-lg mb-4 text-amber-200 font-serif">Kategori</h3>  
-                    <ul class="space-y-2 text-sm text-red-50">  
-                        <li><a href="#" class="hover:text-white transition">Politik & Hukum</a></li>  
-                        <li><a href="#" class="hover:text-white transition">Ekonomi Bisnis</a></li>  
-                        <li><a href="#" class="hover:text-white transition">Olahraga</a></li>  
-                        <li><a href="#" class="hover:text-white transition">Sains & Tekno</a></li>  
-                        <li><a href="#" class="hover:text-white transition">Otomotif</a></li>  
-                    </ul>  
-                </div>  
-                <div>  
-                    <h3 class="font-bold text-lg mb-4 text-amber-200 font-serif">Perusahaan</h3>  
-                    <ul class="space-y-2 text-sm text-red-50">  
-                        <li><a href="javascript:void(0)" onclick="window.navigateTo('tentang-kami')" class="hover:text-white transition">Tentang Kami</a></li>  
-                        <li><a href="javascript:void(0)" onclick="window.navigateTo('redaksi')" class="hover:text-white transition">Redaksi</a></li>  
-                        <li><a href="javascript:void(0)" onclick="window.navigateTo('pedoman-media-siber')" class="hover:text-white transition">Pedoman Media Siber</a></li>  
-                        <li><a href="javascript:void(0)" onclick="window.navigateTo('karir')" class="hover:text-white transition">Karir</a></li>  
-                        <li><a href="javascript:void(0)" onclick="window.navigateTo('kontak')" class="hover:text-white transition">Kontak</a></li>  
-                    </ul>  
-                </div>  
-                <div>  
-                    <h3 class="font-bold text-lg mb-4 text-amber-200 font-serif">Hubungi Kami</h3>  
-                    <ul class="space-y-3 text-sm text-red-50">  
-                        <li class="flex items-start gap-3">  
-                            <i data-lucide="map-pin" class="w-5 h-5 mt-0.5 text-amber-300"></i>  
-                            <span>Jl. Perintis Kemerdekaan No.KM.10,<br>Tamalanrea Indah, Kec. Tamalanrea,<br>Kota Makassar, Sulawesi Selatan 90245</span>  
-                        </li>  
-                        <li class="flex items-center gap-3">  
-                            <i data-lucide="phone" class="w-5 h-5 text-amber-300"></i>  
-                            <span>+62 123 456 7890</span>  
-                        </li>  
-                        <li class="flex items-center gap-3">  
-                            <i data-lucide="mail" class="w-5 h-5 text-amber-300"></i>  
-                            <span>redaksi@dailiriz.id</span>  
-                        </li>  
-                    </ul>  
-                </div>  
-            </div>  
-            <div class="border-t border-white/20 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-red-100">  
-                <p>&copy; 2026 Dailiriz. Hak Cipta Dilindungi Undang-Undang.</p>  
-                <div class="flex gap-6 mt-4 md:mt-0">  
-                    <a href="javascript:void(0)" onclick="window.navigateTo('kebijakan-privasi')" class="hover:text-white">Kebijakan Privasi</a>  
-                    <a href="javascript:void(0)" onclick="window.navigateTo('syarat-ketentuan')" class="hover:text-white">Syarat & Ketentuan</a>  
-                </div>  
-            </div>  
-        </div>  
-    </footer>  
+    <div id="layout-footer"></div>
 
     <div id="toast" class="fixed bottom-5 right-5 bg-white border-l-4 border-green-500 text-slate-800 px-6 py-4 rounded shadow-2xl transform translate-y-24 transition-transform duration-300 z-50 flex items-center gap-3">  
         <i data-lucide="check-circle" class="text-green-500"></i>  
@@ -253,6 +120,7 @@
         </div>
     </div>
 
+    <script type="module" src="./js/layout-loader.js"></script>
     <script type="module" src="./js/firebase-config.js"></script>
     <script type="module" src="./js/public.js"></script>
 </body>  
