@@ -1,0 +1,56 @@
+<div class="bg-slate-900 text-slate-300 py-1 text-xs">
+  <div class="container mx-auto px-4 flex justify-between items-center">
+    <span id="current-date"></span>
+    <div class="flex gap-4">
+      <a href="#" class="hover:text-white">Edisi Digital</a>
+      <a href="#" class="hover:text-white">Langganan</a>
+    </div>
+  </div>
+</div>
+<header class="bg-gradient-to-r from-red-900 via-red-600 to-amber-400 shadow-lg sticky top-0 z-50">
+  <div class="container mx-auto px-4">
+    <div class="flex justify-between items-center py-4">
+      <div class="flex items-center gap-2">
+        <i data-lucide="newspaper" class="text-white w-8 h-8"></i>
+        <h1 class="font-serif text-2xl md:text-3xl font-bold text-white tracking-wide">
+          Daili<span class="text-amber-200 italic">Riz</span>
+        </h1>
+      </div>
+      <nav class="hidden md:flex space-x-6 text-white font-medium text-sm tracking-wider">
+        <a href="javascript:void(0)" onclick="window.navigateTo?.('beranda')" class="hover:text-amber-200 transition-colors border-b-2 border-transparent hover:border-amber-200 pb-1">BERANDA</a>
+        <a href="javascript:void(0)" onclick="window.navigateTo?.('news')" class="hover:text-amber-200 transition-colors border-b-2 border-transparent hover:border-amber-200 pb-1">NEWS</a>
+        <a href="javascript:void(0)" onclick="window.navigateTo?.('feature')" class="hover:text-amber-200 transition-colors border-b-2 border-transparent hover:border-amber-200 pb-1">FEATURE</a>
+        <a href="javascript:void(0)" onclick="window.navigateTo?.('opini')" class="hover:text-amber-200 transition-colors border-b-2 border-transparent hover:border-amber-200 pb-1">OPINI</a>
+        <a href="javascript:void(0)" onclick="window.navigateTo?.('cek-fakta')" class="hover:text-amber-200 transition-colors border-b-2 border-transparent hover:border-amber-200 pb-1">CEK FAKTA</a>
+      </nav>
+      <div class="flex items-center gap-4">
+        <button id="search-btn" class="text-white hover:text-amber-200 transition">
+          <i data-lucide="search" class="w-5 h-5"></i>
+        </button>
+        <button id="mobile-menu-btn" class="md:hidden text-white">
+          <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+<div id="mobile-overlay" class="fixed inset-0 bg-black/60 z-40 hidden opacity-0 transition-opacity duration-300 pointer-events-none"></div>
+<div id="mobile-menu" class="fixed top-0 right-0 h-full w-64 bg-gradient-to-b from-red-900 to-red-800 z-50 transform translate-x-full transition-transform duration-300 ease-in-out shadow-2xl flex flex-col md:hidden">
+  <div class="flex justify-between items-center p-5 border-b border-red-700/50">
+    <div class="flex items-center gap-2">
+      <i data-lucide="newspaper" class="text-white w-6 h-6"></i>
+      <span class="font-serif text-xl font-bold text-white tracking-wide">Daili<span class="text-amber-200 italic">Riz</span></span>
+    </div>
+    <button id="close-menu-btn" class="text-white hover:text-amber-200 transition-colors p-1">
+      <i data-lucide="x" class="w-6 h-6"></i>
+    </button>
+  </div>
+  <nav class="flex flex-col p-5 space-y-4 text-white font-medium overflow-y-auto flex-1">
+    <a href="javascript:void(0)" onclick="window.navigateTo?.('beranda')" class="hover:text-amber-300 transition flex items-center gap-3 py-2"><i data-lucide="home" class="w-4 h-4"></i> Beranda</a>
+    <a href="javascript:void(0)" onclick="window.navigateTo?.('news')" class="hover:text-amber-300 transition flex items-center gap-3 py-2"><i data-lucide="globe" class="w-4 h-4"></i> News</a>
+    <a href="javascript:void(0)" onclick="window.navigateTo?.('feature')" class="hover:text-amber-300 transition flex items-center gap-3 py-2"><i data-lucide="star" class="w-4 h-4"></i> Feature</a>
+    <a href="javascript:void(0)" onclick="window.navigateTo?.('opini')" class="hover:text-amber-300 transition flex items-center gap-3 py-2"><i data-lucide="pen-tool" class="w-4 h-4"></i> Opini</a>
+    <a href="javascript:void(0)" onclick="window.navigateTo?.('cek-fakta')" class="hover:text-amber-300 transition flex items-center gap-3 py-2"><i data-lucide="shield-check" class="w-4 h-4"></i> Cek Fakta</a>
+  </nav>
+  <div class="p-5 border-t border-red-700/50 text-xs text-red-200">&copy; 2026 Dailiriz</div>
+</div>
