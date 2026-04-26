@@ -133,7 +133,11 @@ function renderLatestNews(articles) {
   }
   container.innerHTML = '';
   articles.forEach(article => {
-    const categoryColor = { 'Nasional': 'red', 'Ekonomi': 'blue', 'Teknologi': 'purple', 'Gaya Hidup': 'pink', 'Opini': 'amber', 'Olahraga': 'green', 'Internasional': 'indigo' }[article.category] || 'gray';
+    const categoryColor = {
+      'Nasional': 'red', 'Ekonomi': 'blue', 'Teknologi': 'purple',
+      'Gaya Hidup': 'pink', 'Opini': 'amber', 'Olahraga': 'green',
+      'Internasional': 'indigo', 'Feature': 'amber', 'Cek Fakta': 'rose'
+    }[article.category] || 'gray';
     const articleElement = document.createElement('article');
     articleElement.className = 'bg-white rounded-lg shadow-sm hover:shadow-lg transition duration-300 overflow-hidden group cursor-pointer';
     articleElement.innerHTML = `
@@ -166,9 +170,9 @@ async function renderView(page) {
     case 'news':
     case 'feature':
     case 'opini':
+    case 'cek-fakta':
       await renderCategoryPage(page, container);
       break;
-    case 'cek-fakta':
     case 'tentang-kami':
     case 'redaksi':
     case 'pedoman-media-siber':
@@ -291,7 +295,7 @@ function initSearchLogic() {
     const modal = document.getElementById('search-modal');
     const input = document.getElementById('search-input');
     const resultsContainer = document.getElementById('search-results-list');
-    
+
     if (!searchBtn || !modal || !input) {
         console.warn('Search elements not found');
         return;
@@ -318,7 +322,7 @@ function initSearchLogic() {
             modal.classList.remove('flex');
         }
     });
-    
+
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
             modal.classList.add('hidden');
@@ -340,7 +344,7 @@ function initSearchLogic() {
 
     const performSearch = () => {
         const keyword = input.value.toLowerCase().trim();
-        
+
         if (keyword.length < 2) {
             resultsContainer.innerHTML = '<p class="text-slate-400 text-sm text-center py-8">Ketik minimal 2 karakter untuk mencari...</p>';
             return;
@@ -372,7 +376,7 @@ function initSearchLogic() {
                 </div>
             </div>
         `).join('');
-        
+
         if (typeof lucide !== 'undefined') lucide.createIcons();
     };
 
@@ -386,7 +390,7 @@ function initSearchLogic() {
             });
             btn.classList.remove('border', 'border-slate-700', 'text-slate-300');
             btn.classList.add('bg-amber-400', 'text-red-900', 'active');
-            
+
             currentSearchCategory = btn.dataset.cat;
             performSearch();
         };
@@ -407,24 +411,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.openMobileMenu = function() {
     if (!mobileMenu || !overlay) return;
-    
+
     overlay.classList.remove('hidden', 'pointer-events-none');
     setTimeout(() => overlay.classList.remove('opacity-0'), 10);
-    
+
     mobileMenu.classList.remove('translate-x-full');
-    
+
     document.body.classList.add('overflow-hidden');
-    
+
     if (typeof lucide !== 'undefined') lucide.createIcons();
   };
 
   window.closeMobileMenu = function() {
     if (!mobileMenu || !overlay) return;
-    
+
     mobileMenu.classList.add('translate-x-full');
-    
+
     overlay.classList.add('opacity-0');
-    
+
     setTimeout(() => {
         overlay.classList.add('hidden', 'pointer-events-none');
         document.body.classList.remove('overflow-hidden');
