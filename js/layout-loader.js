@@ -1,4 +1,4 @@
-export async function loadLayout() {
+export async function loadLayout(isSPA = false) {
   try {
     const [headerRes, footerRes] = await Promise.all([
       fetch('./components/header.html'),
@@ -15,6 +15,10 @@ export async function loadLayout() {
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
     initLayoutLogic();
+    
+    if (isSPA && typeof initSearchLogic === 'function') {
+      initSearchLogic();
+    }
   } catch (err) {
     console.error('❌ Layout Loader Error:', err);
     document.getElementById('layout-header').innerHTML = '<div class="bg-red-50 text-red-600 p-4 text-center">Gagal memuat navigasi. Muat ulang halaman.</div>';
@@ -67,5 +71,3 @@ function initLayoutLogic() {
     };
   }
 }
-
-document.addEventListener('DOMContentLoaded', loadLayout);
