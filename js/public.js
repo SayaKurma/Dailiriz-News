@@ -399,5 +399,25 @@ function initSearchLogic() {
 
 document.addEventListener('DOMContentLoaded', () => {
   initSearchLogic();
-  window.navigateTo('beranda');
+  const hashPage = window.location.hash.replace('#', '').trim();
+  const validPages = ['beranda', 'news', 'feature', 'opini', 'cek-fakta', 
+                      'tentang-kami', 'redaksi', 'pedoman-media-siber', 
+                      'karir', 'kontak', 'kebijakan-privasi', 'syarat-ketentuan'];
+  
+  if (hashPage && validPages.includes(hashPage)) {
+    window.location.href = `index.html#${hashPage}`;
+  } else {
+    window.navigateTo('beranda');
+  }
+});
+
+window.addEventListener('hashchange', () => {
+  const hashPage = window.location.hash.replace('#', '').trim() || 'beranda';
+  const validPages = ['beranda', 'news', 'feature', 'opini', 'cek-fakta'];
+  
+  if (validPages.includes(hashPage) && typeof window.navigateTo === 'function') {
+    if (document.getElementById('spa-container')) {
+      window.navigateTo(hashPage);
+    }
+  }
 });
