@@ -1,25 +1,11 @@
-export async function loadLayout(isSPA = false) {
+export async function loadLayout() {
   try {
-    if (!document.getElementById('layout-header')) {
-      console.warn('⚠️ #layout-header not found, creating placeholder...');
-      const placeholder = document.createElement('div');
-      placeholder.id = 'layout-header';
-      document.body.insertBefore(placeholder, document.body.firstChild);
-    }
-    if (!document.getElementById('layout-footer')) {
-      console.warn('⚠️ #layout-footer not found, creating placeholder...');
-      const placeholder = document.createElement('div');
-      placeholder.id = 'layout-footer';
-      document.body.appendChild(placeholder);
-    }
-
     const [headerRes, footerRes] = await Promise.all([
       fetch('./components/header.html'),
       fetch('./components/footer.html')
     ]);
 
-    if (!headerRes.ok) throw new Error(`Header: ${headerRes.status} ${headerRes.statusText}`);
-    if (!footerRes.ok) throw new Error(`Footer: ${footerRes.status} ${footerRes.statusText}`);
+    if (!headerRes.ok || !footerRes.ok) throw new Error('Gagal memuat komponen layout');
 
     const headerHtml = await headerRes.text();
     const footerHtml = await footerRes.text();
@@ -27,27 +13,11 @@ export async function loadLayout(isSPA = false) {
     document.getElementById('layout-header').innerHTML = headerHtml;
     document.getElementById('layout-footer').innerHTML = footerHtml;
 
-    if (typeof lucide !== 'undefined') {
-      setTimeout(() => lucide.createIcons(), 50);
-    }
-    
+    if (typeof lucide !== 'undefined') lucide.createIcons();
     initLayoutLogic();
-    
-    if (isSPA && typeof window.initSearchLogic === 'function') {
-      setTimeout(() => window.initSearchLogic(), 100);
-    }
-    
-    console.log('✅ Layout loaded successfully');
   } catch (err) {
     console.error('❌ Layout Loader Error:', err);
-    const headerEl = document.getElementById('layout-header');
-    if (headerEl) {
-      headerEl.innerHTML = `
-        <div class="bg-red-50 text-red-600 p-4 text-center text-sm">
-          ⚠️ Gagal memuat header: ${err.message}<br>
-          <button onclick="window.location.reload()" class="underline mt-2">Muat Ulang</button>
-        </div>`;
-    }
+    document.getElementById('layout-header').innerHTML = '<div class="bg-red-50 text-red-600 p-4 text-center">Gagal memuat navigasi. Muat ulang halaman.</div>';
   }
 }
 
@@ -98,8 +68,4 @@ function initLayoutLogic() {
   }
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => loadLayout(false));
-} else {
-  loadLayout(false);
-}
+document.addEventListener('DOMContentLoaded', loadLayout);
