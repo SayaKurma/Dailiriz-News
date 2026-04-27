@@ -150,7 +150,147 @@ function renderLatestNews(articles) {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-export function initSearchLogic() {
+window.navigateTo = function(page) {
+    if (typeof window.closeMobileMenu === 'function') {
+        window.closeMobileMenu();
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    renderView(page);
+};
+
+async function renderView(page) {
+  const container = document.getElementById('spa-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  switch (page) {
+    case 'beranda':
+      await renderHomePage(container);
+      break;
+    case 'news':
+    case 'feature':
+    case 'opini':
+    case 'cek-fakta':
+      await renderCategoryPage(page, container);
+      break;
+    case 'tentang-kami':
+    case 'redaksi':
+    case 'pedoman-media-siber':
+    case 'karir':
+    case 'kontak':
+    case 'kebijakan-privasi':
+    case 'syarat-ketentuan':
+      renderStaticPage(page, container);
+      break;
+    default:
+      await renderHomePage(container);
+  }
+
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+async function renderHomePage(container) {
+  container.innerHTML = `
+    <div class="flex items-center gap-3 mb-8 bg-white p-3 rounded-lg shadow-sm border-l-4 border-red-600">
+      <span class="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">Terkini</span>
+      <marquee class="text-sm font-medium text-slate-700" id="breaking-news-ticker"></marquee>
+    </div>
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
+      <div id="featured-article" class="lg:col-span-8"></div>
+      <div class="lg:col-span-4 flex flex-col gap-6">
+        <h3 class="font-serif text-xl font-bold border-b-2 border-red-600 pb-2 text-red-800">Terpopuler</h3>
+        <div id="popular-articles"></div>
+        <div class="bg-slate-100 p-6 rounded-xl border border-slate-200 mt-auto">
+          <h4 class="font-serif font-bold text-lg mb-2">Buletin Harian</h4>
+          <p class="text-sm text-slate-600 mb-4">Dapatkan berita terkini langsung di email Anda.</p>
+          <form id="subscribe-form" class="flex flex-col gap-2">
+            <input type="email" id="subscribe-email" placeholder="Email Anda" class="px-4 py-2 rounded border border-slate-300 focus:outline-none focus:border-red-500 text-sm">
+            <button type="submit" class="bg-slate-900 text-white py-2 rounded font-medium hover:bg-red-700 transition text-sm">Langganan</button>
+          </form>
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="flex justify-between items-end mb-6 border-b border-slate-200 pb-2">
+        <h3 class="font-serif text-2xl font-bold text-slate-800">Berita Terbaru</h3>
+      </div>
+      <div id="latest-news" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+    </section>
+    <section class="mt-16 mb-12 bg-stone-100 rounded-2xl p-8 md:p-12 text-center relative overflow-hidden">
+      <div class="absolute top-0 left-0 text-9xl text-stone-200 font-serif opacity-50 -translate-y-8 translate-x-4">"</div>
+      <div class="relative z-10 max-w-3xl mx-auto">
+        <h3 class="font-serif text-2xl md:text-3xl italic text-slate-800 mb-6">"Setiap berita yang Anda baca di sini adalah janji kami untuk menjaga integritas informasi demi masyarakat yang cerdas dan berdaya."</h3>
+        <div class="flex items-center justify-center gap-4">
+          <img src="https://raw.githubusercontent.com/SayaKurma/Kartu-Profil/refs/heads/main/profile.jpg" class="w-12 h-12 rounded-full border-2 border-amber-400" alt="Editor">
+          <div class="text-left">
+            <p class="font-bold text-slate-900">Muhammad Alfaridzi</p>
+            <p class="text-xs text-slate-500 uppercase tracking-wide">Pemimpin Redaksi</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+
+  document.getElementById('subscribe-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    subscribe();
+  });
+
+  await loadNewsData();
+}
+
+async function renderCategoryPage(category, container) {
+  if (allArticles.length === 0) await loadNewsData();
+
+  const filtered = allArticles.filter(a => 
+    a.category?.toLowerCase().replace(/\s+/g, '-') === category || 
+    a.category?.toLowerCase().includes(category)
+  );
+
+  container.innerHTML = `
+    <h2 class="font-serif text-3xl font-bold text-slate-800 mb-2 capitalize">${category.replace('-', ' ')}</h2>
+    <p class="text-slate-500 mb-8">Menampilkan arsip berita untuk kategori ini.</p>
+    <div id="category-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  `;
+
+  const grid = document.getElementById('category-grid');
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500">Belum ada artikel untuk kategori ini.</div>`;
+    return;
+  }
+
+  filtered.forEach(article => {
+    const card = document.createElement('article');
+    card.className = 'bg-white rounded-lg shadow-sm hover:shadow-lg transition duration-300 overflow-hidden group cursor-pointer';
+    card.innerHTML = `
+      <div class="h-48 overflow-hidden"><img src="${article.image || 'https://via.placeholder.com/400x200'}" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500" alt="${article.category}"></div>
+      <div class="p-4">
+        <span class="text-xs font-bold text-red-600 uppercase">${article.category || 'Berita'}</span>
+        <h4 class="font-serif font-bold text-lg mt-2 mb-2 leading-snug group-hover:text-red-700 line-clamp-2">${article.title}</h4>
+        <p class="text-slate-600 text-sm line-clamp-3">${article.description || ''}</p>
+        <div class="mt-3 text-xs text-slate-400">${formatDateID(article.createdAt)}</div>
+      </div>
+    `;
+    card.addEventListener('click', () => window.location.href = `article.html?id=${article.id}`);
+    grid.appendChild(card);
+  });
+}
+
+function renderStaticPage(pageName, container) {
+  const title = pageName.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  container.innerHTML = `
+    <div class="max-w-3xl mx-auto text-center py-16">
+      <i data-lucide="file-text" class="w-12 h-12 mx-auto text-slate-400 mb-4"></i>
+      <h2 class="font-serif text-3xl font-bold text-slate-800 mb-4">${title}</h2>
+      <p class="text-slate-600 mb-6">Halaman ini sedang dalam penyusunan konten resmi. Silakan kembali lagi nanti.</p>
+      <button onclick="window.navigateTo('beranda')" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 transition">Kembali ke Beranda</button>
+    </div>
+  `;
+}
+
+let currentSearchCategory = 'all';
+
+function initSearchLogic() {
     const searchBtn = document.getElementById('search-btn');
     const modal = document.getElementById('search-modal');
     const input = document.getElementById('search-input');
@@ -213,7 +353,7 @@ export function initSearchLogic() {
         const filtered = allArticles.filter(art => {
             const matchTitle = art.title?.toLowerCase().includes(keyword);
             const matchDesc = art.description?.toLowerCase().includes(keyword);
-            const matchCat = window.currentSearchCategory === 'all' || art.category === window.currentSearchCategory;
+            const matchCat = currentSearchCategory === 'all' || art.category === currentSearchCategory;
             return (matchTitle || matchDesc) && matchCat;
         });
 
@@ -251,20 +391,13 @@ export function initSearchLogic() {
             btn.classList.remove('border', 'border-slate-700', 'text-slate-300');
             btn.classList.add('bg-amber-400', 'text-red-900', 'active');
 
-            window.currentSearchCategory = btn.dataset.cat;
+            currentSearchCategory = btn.dataset.cat;
             performSearch();
         };
     });
 }
 
-window.currentSearchCategory = 'all';
-window.initSearchLogic = initSearchLogic;
-
-export async function initSPA() {
-  if (document.getElementById('spa-container')) {
-    await loadNewsData();
-    if (typeof window.navigateTo === 'function') {
-      window.navigateTo('beranda');
-    }
-  }
-}
+document.addEventListener('DOMContentLoaded', () => {
+  initSearchLogic();
+  window.navigateTo('beranda');
+});
