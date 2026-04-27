@@ -150,13 +150,15 @@ function renderLatestNews(articles) {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-window.navigateTo = function(page) {
-    if (typeof window.closeMobileMenu === 'function') {
-        window.closeMobileMenu();
-    }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    renderView(page);
-};
+if (!window.navigateTo) {
+  window.navigateTo = function(page) {
+      if (typeof window.closeMobileMenu === 'function') {
+          window.closeMobileMenu();
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      renderView(page);
+  };
+}
 
 async function renderView(page) {
   const container = document.getElementById('spa-container');
@@ -290,7 +292,7 @@ function renderStaticPage(pageName, container) {
 
 let currentSearchCategory = 'all';
 
-function initSearchLogic() {
+export function initSearchLogic() {
     const searchBtn = document.getElementById('search-btn');
     const modal = document.getElementById('search-modal');
     const input = document.getElementById('search-input');
@@ -397,7 +399,13 @@ function initSearchLogic() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  initSearchLogic();
-  window.navigateTo('beranda');
-});
+export async function initSPA() {
+  if (document.getElementById('spa-container')) {
+    await loadNewsData();
+    window.navigateTo?.('beranda');
+  }
+}
+
+if (document.getElementById('spa-container')) {
+  initSPA();
+}
