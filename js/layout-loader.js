@@ -66,6 +66,40 @@ function initLayoutLogic() {
       else window.location.href = `index.html#${page}`;
     };
   }
+
+  const searchBtn = document.getElementById('search-btn');
+  const searchModal = document.getElementById('search-modal');
+
+  if (searchBtn && searchModal) {
+    searchBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      searchModal.classList.remove('hidden');
+      searchModal.classList.add('flex');
+      document.getElementById('search-input')?.focus();
+      document.body.classList.add('overflow-hidden');
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+  }
+
+  window.closeSearchModal = () => {
+    if (!searchModal) return;
+    searchModal.classList.add('hidden');
+    searchModal.classList.remove('flex');
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) searchInput.value = '';
+    document.body.classList.remove('overflow-hidden');
+  };
+
+  const closeSearchBtn = document.getElementById('close-search');
+  if (closeSearchBtn) {
+    closeSearchBtn.addEventListener('click', window.closeSearchModal);
+  }
+
+  if (searchModal) {
+    searchModal.addEventListener('click', (e) => {
+      if (e.target === searchModal) window.closeSearchModal();
+    });
+  }
 }
 
 document.addEventListener('DOMContentLoaded', loadLayout);
