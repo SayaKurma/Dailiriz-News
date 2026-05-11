@@ -9,6 +9,10 @@ let currentUser = null;
 let currentEditId = null;
 let analyticsChartInstance = null;
 
+function shouldShowCategory(article) {
+  return !['Opini', 'Cek Fakta'].includes(article.type);
+}
+
 export async function initAdminPanel() {
   currentUser = await checkAuth(true);
   if (!currentUser) return;
@@ -103,10 +107,11 @@ async function loadDashboardStats() {
 }
 
 function getArticleDisplayData(article) {
+  const isStandalone = !shouldShowCategory(article);
   return {
     title: escapeHtml(article.title),
     type: escapeHtml(article.type || 'News'),
-    category: escapeHtml(article.category || 'Umum'),
+    category: isStandalone ? null : escapeHtml(article.category || 'Umum'),
     author: escapeHtml(article.author || 'Admin'),
     date: formatDateID(article.createdAt),
     views: (article.views || 0).toLocaleString('id-ID'),
@@ -128,7 +133,7 @@ function createArticleRow(article) {
     <td class="px-4 md:px-6 py-3 md:py-4">
       <div class="flex flex-wrap gap-1">
         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-red-50 text-red-700 border border-red-100">${d.type}</span>
-        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">${d.category}</span>
+        ${d.category ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">${d.category}</span>` : ''}
       </div>
     </td>
     <td class="px-4 md:px-6 py-3 md:py-4 text-sm text-slate-600">${d.author}</td>
@@ -145,7 +150,7 @@ function createArticleMobileCard(article) {
   div.className = 'table-card-mobile';
   div.innerHTML = `
     <div class="table-card-header"><div class="flex justify-between items-start"><h4 class="font-semibold text-slate-800 text-sm truncate flex-1 pr-2" title="${d.title}">${d.title}</h4><span class="status-badge ${d.statusClass} flex-shrink-0">${d.statusText}</span></div></div>
-    <div class="table-card-body"><div class="table-card-row"><span class="table-card-label">Jenis</span><span class="table-card-value">${d.type}</span></div><div class="table-card-row"><span class="table-card-label">Kategori</span><span class="table-card-value">${d.category}</span></div><div class="table-card-row"><span class="table-card-label">Penulis</span><span class="table-card-value">${d.author}</span></div><div class="table-card-row"><span class="table-card-label">Tanggal</span><span class="table-card-value">${d.date}</span></div><div class="table-card-row"><span class="table-card-label">Tayangan</span><span class="table-card-value">${d.views}</span></div><div class="pt-3 flex justify-between"><button class="flex-1 mr-2 bg-slate-100 text-slate-700 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1 edit-article-btn" data-id="${article.id}"><i data-lucide="edit" class="w-3 h-3"></i> Edit</button><button class="flex-1 ml-2 bg-red-50 text-red-600 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1 delete-article-btn" data-id="${article.id}"><i data-lucide="trash-2" class="w-3 h-3"></i> Hapus</button></div></div>
+    <div class="table-card-body"><div class="table-card-row"><span class="table-card-label">Jenis</span><span class="table-card-value">${d.type}</span></div>${d.category ? `<div class="table-card-row"><span class="table-card-label">Kategori</span><span class="table-card-value">${d.category}</span></div>` : ''}<div class="table-card-row"><span class="table-card-label">Penulis</span><span class="table-card-value">${d.author}</span></div><div class="table-card-row"><span class="table-card-label">Tanggal</span><span class="table-card-value">${d.date}</span></div><div class="table-card-row"><span class="table-card-label">Tayangan</span><span class="table-card-value">${d.views}</span></div><div class="pt-3 flex justify-between"><button class="flex-1 mr-2 bg-slate-100 text-slate-700 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1 edit-article-btn" data-id="${article.id}"><i data-lucide="edit" class="w-3 h-3"></i> Edit</button><button class="flex-1 ml-2 bg-red-50 text-red-600 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1 delete-article-btn" data-id="${article.id}"><i data-lucide="trash-2" class="w-3 h-3"></i> Hapus</button></div></div>
   `;
   return div;
 }
@@ -207,19 +212,23 @@ async function loadModerationList() {
       if (mobileContainer) mobileContainer.innerHTML = '<div class="text-center py-4 text-slate-500">Tidak ada artikel yang menunggu moderasi</div>';
       return;
     }
-    tbody.innerHTML = pendingArticles.map(article => `
+    tbody.innerHTML = pendingArticles.map(article => {
+      const showCat = shouldShowCategory(article);
+      return `
       <tr class="hover:bg-slate-50 transition-colors">
         <td class="px-6 py-4 max-w-md"><p class="font-semibold text-slate-800">${escapeHtml(article.title)}</p><p class="text-xs text-slate-500 mt-1 truncate">${escapeHtml(article.description || article.content?.substring(0, 100) || '')}</p></td>
         <td class="px-6 py-4">${escapeHtml(article.author || 'Anonim')}</td>
-        <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">${escapeHtml(article.category || 'Umum')}</span></td>
+        <td class="px-6 py-4">${showCat ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">${escapeHtml(article.category || 'Umum')}</span>` : '<span class="text-xs text-slate-400">-</span>'}</td>
         <td class="px-6 py-4 text-sm text-slate-500">${formatDateID(article.createdAt)}</td>
         <td class="px-6 py-4 text-center"><button class="px-3 py-1.5 bg-red-50 text-red-600 rounded hover:bg-red-100 text-sm font-medium transition-colors review-article-btn" data-id="${article.id}">Tinjau</button></td>
       </tr>
-    `).join('');
+    `}).join('');
     if (mobileContainer) {
-      mobileContainer.innerHTML = pendingArticles.map(article => `
-        <div class="table-card-mobile"><div class="table-card-header"><div class="flex justify-between items-start"><h4 class="font-semibold text-slate-800 text-sm truncate flex-1 pr-2">${escapeHtml(article.title)}</h4><span class="status-badge status-pending flex-shrink-0">Menunggu</span></div></div><div class="table-card-body"><div class="table-card-row"><span class="table-card-label">Penulis</span><span class="table-card-value">${escapeHtml(article.author || 'Anonim')}</span></div><div class="table-card-row"><span class="table-card-label">Kategori</span><span class="table-card-value">${escapeHtml(article.category || 'Umum')}</span></div><div class="table-card-row"><span class="table-card-label">Waktu Kirim</span><span class="table-card-value">${formatDateID(article.createdAt)}</span></div><div class="table-card-row"><span class="table-card-label">Cuplikan</span><span class="table-card-value text-xs">${escapeHtml(article.description || article.content?.substring(0, 100) || '')}</span></div><div class="pt-3"><button class="w-full bg-red-50 text-red-600 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1 review-article-btn" data-id="${article.id}"><i data-lucide="eye" class="w-3 h-3"></i> Tinjau Artikel</button></div></div></div>
-      `).join('');
+      mobileContainer.innerHTML = pendingArticles.map(article => {
+        const showCat = shouldShowCategory(article);
+        return `
+        <div class="table-card-mobile"><div class="table-card-header"><div class="flex justify-between items-start"><h4 class="font-semibold text-slate-800 text-sm truncate flex-1 pr-2">${escapeHtml(article.title)}</h4><span class="status-badge status-pending flex-shrink-0">Menunggu</span></div></div><div class="table-card-body"><div class="table-card-row"><span class="table-card-label">Penulis</span><span class="table-card-value">${escapeHtml(article.author || 'Anonim')}</span></div>${showCat ? `<div class="table-card-row"><span class="table-card-label">Kategori</span><span class="table-card-value">${escapeHtml(article.category || 'Umum')}</span></div>` : ''}<div class="table-card-row"><span class="table-card-label">Waktu Kirim</span><span class="table-card-value">${formatDateID(article.createdAt)}</span></div><div class="table-card-row"><span class="table-card-label">Cuplikan</span><span class="table-card-value text-xs">${escapeHtml(article.description || article.content?.substring(0, 100) || '')}</span></div><div class="pt-3"><button class="w-full bg-red-50 text-red-600 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1 review-article-btn" data-id="${article.id}"><i data-lucide="eye" class="w-3 h-3"></i> Tinjau Artikel</button></div></div></div>
+      `}).join('');
     }
     if (typeof lucide !== 'undefined') lucide.createIcons();
   } catch (error) { console.error('Error loading moderation list:', error); }
@@ -407,20 +416,22 @@ async function handleSaveArticle() {
   const imageSourceInput = document.getElementById('input-image-source')?.value.trim();
 
   const description = cleanContent?.substring(0, 200).replace(/<[^>]*>/g, '') || '';
-  if (!title || !cleanContent || !category) { showToast('Judul, konten, dan kategori wajib diisi', 'error'); return; }
+
+  const isStandaloneType = ['Opini', 'Cek Fakta'].includes(type);
+
+  if (!title || !cleanContent || (!isStandaloneType && !category)) {
+    showToast('Judul, konten, dan kategori wajib diisi', 'error');
+    return;
+  }
 
   try {
     const finalAuthor = authorInput || currentUser?.email?.split('@')[0] || 'Admin';
-
-    const isStandaloneType = ['Opini', 'Cek Fakta'].includes(type);
-    const sanitizedCategory = isStandaloneType ? '' : (category || '');
 
     const articleData = {
       title,
       content: cleanContent,
       description,
       type,
-      category: sanitizedCategory,
       status,
       image,
       imageCaption,
@@ -429,6 +440,10 @@ async function handleSaveArticle() {
       updatedAt: serverTimestamp(),
       views: 0
     };
+
+    if (!isStandaloneType && category) {
+      articleData.category = category;
+    }
 
     const articleId = document.getElementById('article-id')?.value;
     if (articleId) { 
@@ -463,7 +478,14 @@ async function handleEditArticle(id) {
       document.getElementById('article-content').value = article.content || '';
       document.getElementById('article-status').value = article.status || 'draft';
       document.getElementById('article-type').value = article.type || 'News';
-      document.getElementById('article-category').value = article.category || 'Nasional';
+      
+      const categoryField = document.getElementById('article-category');
+      if (['Opini', 'Cek Fakta'].includes(article.type)) {
+        categoryField.value = '';
+      } else {
+        categoryField.value = article.category || 'Nasional';
+      }
+
       document.getElementById('article-image-url').value = article.image || '';
       document.getElementById('article-image-caption').value = article.imageCaption || '';
       document.getElementById('input-author').value = article.author || '';
@@ -473,6 +495,12 @@ async function handleEditArticle(id) {
       document.getElementById('article-list-view').classList.add('hidden');
       document.getElementById('create-article-form').classList.remove('hidden');
       document.getElementById('article-preview-panel')?.classList.add('hidden');
+      
+      const typeSelect = document.getElementById('article-type');
+      if (typeSelect) {
+        typeSelect.dispatchEvent(new Event('change'));
+      }
+
       const urlSlugSpan = document.getElementById('url-slug');
       if (urlSlugSpan && article.title) {
         const slug = article.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -508,7 +536,7 @@ async function showModerationDetail(articleId) {
     if (docSnap.exists()) {
       const article = { id: docSnap.id, ...docSnap.data() };
       document.getElementById('moderation-article-id').value = article.id;
-      document.getElementById('detail-category').textContent = article.category || 'Umum';
+      document.getElementById('detail-category').textContent = shouldShowCategory(article) ? (article.category || 'Umum') : '-';
       document.getElementById('detail-title').textContent = article.title || '';
       document.getElementById('detail-author').textContent = article.author || 'Anonim';
       document.getElementById('detail-date').textContent = formatDateID(article.createdAt);
