@@ -1,5 +1,5 @@
 import { db, formatDateID } from './firebase-config.js';
-import { collection, getDocs, query, orderBy, limit, where } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+import { collection, getDocs, query, orderBy, limit, where } from "https://www.gstatic.com/firebasejs/12.12.0/firestore";
 
 let allArticles = [];
 
@@ -156,6 +156,15 @@ window.navigateTo = function(page) {
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
     renderView(page);
+};
+
+window.router = async function(page) {
+  const container = document.getElementById('spa-container');
+  if (!container) return;
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  
+  await renderView(page);
 };
 
 async function renderView(page) {
@@ -403,21 +412,27 @@ document.addEventListener('DOMContentLoaded', () => {
   const validPages = ['beranda', 'news', 'feature', 'opini', 'cek-fakta', 
                       'tentang-kami', 'redaksi', 'pedoman-media-siber', 
                       'karir', 'kontak', 'kebijakan-privasi', 'syarat-ketentuan'];
-  
+
   if (hashPage && validPages.includes(hashPage)) {
-    window.location.href = `index.html#${hashPage}`;
+    if (typeof window.router === 'function') {
+      window.router(hashPage);
+    } else {
+      window.navigateTo?.(hashPage);
+    }
   } else {
-    window.navigateTo('beranda');
+    if (typeof window.router === 'function') {
+      window.router('beranda');
+    } else {
+      window.navigateTo?.('beranda');
+    }
   }
 });
 
 window.addEventListener('hashchange', () => {
   const hashPage = window.location.hash.replace('#', '').trim() || 'beranda';
   const validPages = ['beranda', 'news', 'feature', 'opini', 'cek-fakta'];
-  
-  if (validPages.includes(hashPage) && typeof window.navigateTo === 'function') {
-    if (document.getElementById('spa-container')) {
-      window.navigateTo(hashPage);
-    }
+
+  if (validPages.includes(hashPage) && typeof window.router === 'function') {
+    window.router(hashPage);
   }
 });
