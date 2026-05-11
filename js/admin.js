@@ -105,7 +105,7 @@ async function loadDashboardStats() {
 function getArticleDisplayData(article) {
   return {
     title: escapeHtml(article.title),
-    category: escapeHtml(article.category || 'Umum'),
+    category: escapeHtml(article.subCategory || article.parentCategory || article.category || 'Umum'),
     author: escapeHtml(article.author || 'Admin'),
     date: formatDateID(article.createdAt),
     views: (article.views || 0).toLocaleString('id-ID'),
@@ -208,7 +208,7 @@ async function loadModerationList() {
         <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">${escapeHtml(article.category || 'Umum')}</span></td>
         <td class="px-6 py-4 text-sm text-slate-500">${formatDateID(article.createdAt)}</td>
         <td class="px-6 py-4 text-center"><button class="px-3 py-1.5 bg-red-50 text-red-600 rounded hover:bg-red-100 text-sm font-medium transition-colors review-article-btn" data-id="${article.id}">Tinjau</button></td>
-      </tr>
+       </tr>
     `).join('');
     if (mobileContainer) {
       mobileContainer.innerHTML = pendingArticles.map(article => `
@@ -255,6 +255,16 @@ function setupEventListeners() {
     if (reviewBtn) { const id = reviewBtn.dataset.id; await showModerationDetail(id); }
   });
 
+  const parentCatEl = document.getElementById('parent-category');
+  const subWrapper = document.getElementById('sub-category-wrapper');
+  if (parentCatEl && subWrapper) {
+    parentCatEl.addEventListener('change', (e) => {
+      const show = ['News', 'Feature'].includes(e.target.value);
+      subWrapper.classList.toggle('hidden', !show);
+      if (!show) document.getElementById('sub-category').value = '';
+    });
+  }
+
   const createBtn = document.getElementById('create-new-article-btn');
   if (createBtn) createBtn.addEventListener('click', () => { 
     currentEditId = null; 
@@ -267,6 +277,8 @@ function setupEventListeners() {
     document.getElementById('form-title').textContent = 'Tulis Artikel Baru'; 
     document.getElementById('submit-btn-text').textContent = 'Terbitkan';
     document.getElementById('article-preview-panel')?.classList.add('hidden');
+    const subWrapper = document.getElementById('sub-category-wrapper');
+    if (subWrapper) subWrapper.classList.add('hidden');
     requestAnimationFrame(() => {
         setTimeout(() => {
             if (typeof window.initTinyMCE === 'function') {
@@ -362,8 +374,8 @@ async function handleSaveArticle() {
         ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'style']
       })
     : rawContent;
-  const categoryRadio = document.querySelector('input[name="category"]:checked');
-  const category = categoryRadio?.value;
+  const parentCategory = document.getElementById('parent-category')?.value;
+  const subCategory = document.getElementById('sub-category')?.value.trim();
   const status = document.getElementById('article-status')?.value || 'draft';
   const image = document.getElementById('article-image-url')?.value.trim() || 'https://via.placeholder.com/800x400';
   const imageCaption = document.getElementById('article-image-caption')?.value.trim() || '';
@@ -372,7 +384,7 @@ async function handleSaveArticle() {
   const imageSourceInput = document.getElementById('input-image-source')?.value.trim();
 
   const description = cleanContent?.substring(0, 200).replace(/<[^>]*>/g, '') || '';
-  if (!title || !cleanContent || !category) { showToast('Judul, konten, dan kategori wajib diisi', 'error'); return; }
+  if (!title || !cleanContent || !parentCategory) { showToast('Judul, konten, dan kategori utama wajib diisi', 'error'); return; }
 
   try {
     const finalAuthor = authorInput || currentUser?.email?.split('@')[0] || 'Admin';
@@ -381,7 +393,9 @@ async function handleSaveArticle() {
       title,
       content: cleanContent,
       description,
-      category,
+      category: parentCategory,
+      parentCategory,
+      subCategory: subCategory || null,
       status,
       image,
       imageCaption,
@@ -427,8 +441,15 @@ async function handleEditArticle(id) {
       document.getElementById('article-image-caption').value = article.imageCaption || '';
       document.getElementById('input-author').value = article.author || '';
       document.getElementById('input-image-source').value = article.imageSource || '';
-      const categoryRadios = document.querySelectorAll('input[name="category"]');
-      categoryRadios.forEach(radio => { if (radio.value === article.category) radio.checked = true; });
+      const parentCatEl = document.getElementById('parent-category');
+      const subCatEl = document.getElementById('sub-category');
+      const subWrapper = document.getElementById('sub-category-wrapper');
+      if (parentCatEl) parentCatEl.value = article.parentCategory || article.category || '';
+      if (subCatEl && subWrapper) {
+        const shouldShow = ['News', 'Feature'].includes(article.category || article.parentCategory);
+        subWrapper.classList.toggle('hidden', !shouldShow);
+        if (shouldShow) subCatEl.value = article.subCategory || '';
+      }
       document.getElementById('form-title').textContent = 'Edit Artikel';
       document.getElementById('submit-btn-text').textContent = 'Perbarui';
       document.getElementById('article-list-view').classList.add('hidden');
