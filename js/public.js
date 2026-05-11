@@ -14,6 +14,19 @@ function showToast(message, type = 'success') {
   setTimeout(() => toast.classList.add('translate-y-24'), 3000);
 }
 
+function renderArticleBadges(article) {
+    const standaloneTypes = ['Opini', 'Cek Fakta'];
+    const isStandalone = standaloneTypes.includes(article.type);
+    
+    const typeBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">${article.type || 'News'}</span>`;
+    
+    const categoryBadge = (!isStandalone && article.category?.trim()) 
+        ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">${article.category}</span>`
+        : '';
+
+    return `<div class="flex flex-wrap gap-1 mb-2">${typeBadge}${categoryBadge}</div>`;
+}
+
 export async function subscribe() {
   const emailInput = document.getElementById('subscribe-email');
   if (!emailInput || !emailInput.value) {
@@ -108,10 +121,7 @@ function renderFeaturedArticle(article) {
       <img src="${article.image || 'https://via.placeholder.com/800x400'}" alt="${article.title}" class="w-full h-full object-cover">
       <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
       <div class="absolute bottom-0 left-0 p-6 md:p-8 w-full">
-        <div class="flex flex-wrap gap-1 mb-3">
-          <span class="text-[10px] font-bold bg-red-100 text-red-700 px-1.5 py-0.5 rounded">${article.type || 'News'}</span>
-          <span class="text-[10px] font-medium bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">${article.category || 'Umum'}</span>
-        </div>
+        ${renderArticleBadges(article)}
         <h2 class="font-serif text-3xl md:text-5xl font-bold text-white leading-tight mb-3">${article.title}</h2>
         <p class="text-slate-200 text-sm md:text-base line-clamp-2 max-w-2xl">${article.description || ''}</p>
         <div class="mt-4 text-slate-400 text-xs flex items-center gap-2"><i data-lucide="clock" class="w-3 h-3"></i> ${formatDateID(article.createdAt)}</div>
@@ -135,10 +145,7 @@ function renderPopularArticles(articles) {
     articleElement.innerHTML = `
       <div class="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden image-hover-zoom"><img src="${article.image || 'https://via.placeholder.com/100x100'}" class="w-full h-full object-cover" alt="${article.category}"></div>
       <div class="flex flex-col justify-center">
-        <div class="flex flex-wrap gap-1 mb-1">
-          <span class="text-[10px] font-bold bg-red-100 text-red-700 px-1.5 py-0.5 rounded">${article.type || 'News'}</span>
-          <span class="text-[10px] font-medium bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">${article.category || 'Umum'}</span>
-        </div>
+        ${renderArticleBadges(article)}
         <h4 class="font-serif font-bold text-lg leading-tight group-hover:text-red-700 transition">${article.title}</h4><span class="text-xs text-slate-500 mt-2">${formatDateID(article.createdAt)}</span></div>
     `;
     articleElement.addEventListener('click', () => { window.location.href = `article.html?id=${article.id}`; });
@@ -161,10 +168,7 @@ function renderLatestNews(articles) {
     articleElement.innerHTML = `
       <div class="h-48 overflow-hidden"><img src="${article.image || 'https://via.placeholder.com/400x200'}" class="w-full h-full object-cover transform group-hover:scale-110 transition duration-500" alt="${article.category}"></div>
       <div class="p-4">
-        <div class="flex flex-wrap gap-1 mb-2">
-          <span class="text-[10px] font-bold bg-red-100 text-red-700 px-1.5 py-0.5 rounded">${article.type || 'News'}</span>
-          <span class="text-[10px] font-medium bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">${article.category || 'Umum'}</span>
-        </div>
+        ${renderArticleBadges(article)}
         <h4 class="font-serif font-bold text-lg mt-2 mb-2 leading-snug group-hover:text-red-700">${article.title}</h4><p class="text-slate-600 text-sm line-clamp-3">${article.description || ''}</p></div>
     `;
     articleElement.addEventListener('click', () => { window.location.href = `article.html?id=${article.id}`; });
@@ -300,10 +304,7 @@ async function renderCategoryPage(pageName, container) {
     card.innerHTML = `
       <div class="h-48 overflow-hidden"><img src="${article.image || 'https://via.placeholder.com/400x200'}" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500" alt="${article.category}"></div>
       <div class="p-4">
-        <div class="flex flex-wrap gap-1 mb-2">
-          <span class="text-[10px] font-bold bg-red-100 text-red-700 px-1.5 py-0.5 rounded">${article.type || 'News'}</span>
-          <span class="text-[10px] font-medium bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">${article.category || 'Umum'}</span>
-        </div>
+        ${renderArticleBadges(article)}
         <h4 class="font-serif font-bold text-lg mt-2 mb-2 leading-snug group-hover:text-red-700 line-clamp-2">${article.title}</h4>
         <p class="text-slate-600 text-sm line-clamp-3">${article.description || ''}</p>
         <div class="mt-3 text-xs text-slate-400">${formatDateID(article.createdAt)}</div>
@@ -408,10 +409,7 @@ function initSearchLogic() {
                      alt="${art.title}"
                      onerror="this.src='https://via.placeholder.com/64x64?text=No+Image'">
                 <div class="flex-1 min-w-0">
-                    <div class="flex flex-wrap gap-1 mb-1">
-                      <span class="text-[10px] font-bold bg-amber-400 text-red-900 px-1.5 py-0.5 rounded">${art.type || 'News'}</span>
-                      <span class="text-[10px] font-medium bg-white/10 text-white px-1.5 py-0.5 rounded">${art.category || 'Umum'}</span>
-                    </div>
+                    ${renderArticleBadges(art)}
                     <h4 class="text-white font-medium text-sm group-hover:text-amber-400 transition line-clamp-2">${art.title}</h4>
                     <p class="text-slate-400 text-xs mt-1 line-clamp-1">${art.description || ''}</p>
                 </div>
