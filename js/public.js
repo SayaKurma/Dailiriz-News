@@ -1,5 +1,5 @@
 import { db, formatDateID } from './firebase-config.js';
-import { collection, getDocs, query, orderBy, limit, where } from "https://www.gstatic.com/firebasejs/12.12.0/firestore";
+import { collection, getDocs, query, orderBy, limit, where } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
 let allArticles = [];
 
