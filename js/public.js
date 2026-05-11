@@ -93,7 +93,7 @@ function renderFeaturedArticle(article) {
       <img src="${article.image || 'https://via.placeholder.com/800x400'}" alt="${article.title}" class="w-full h-full object-cover">
       <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
       <div class="absolute bottom-0 left-0 p-6 md:p-8 w-full">
-        <span class="bg-amber-400 text-red-900 text-xs font-bold px-2 py-1 mb-3 inline-block rounded">${article.category || 'Berita'}</span>
+        <span class="bg-amber-400 text-red-900 text-xs font-bold px-2 py-1 mb-3 inline-block rounded">${article.subCategory || article.parentCategory || article.category || 'Berita'}</span>
         <h2 class="font-serif text-3xl md:text-5xl font-bold text-white leading-tight mb-3">${article.title}</h2>
         <p class="text-slate-200 text-sm md:text-base line-clamp-2 max-w-2xl">${article.description || ''}</p>
         <div class="mt-4 text-slate-400 text-xs flex items-center gap-2"><i data-lucide="clock" class="w-3 h-3"></i> ${formatDateID(article.createdAt)}</div>
@@ -115,8 +115,8 @@ function renderPopularArticles(articles) {
     const articleElement = document.createElement('article');
     articleElement.className = 'flex gap-4 group cursor-pointer';
     articleElement.innerHTML = `
-      <div class="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden image-hover-zoom"><img src="${article.image || 'https://via.placeholder.com/100x100'}" class="w-full h-full object-cover" alt="${article.category}"></div>
-      <div class="flex flex-col justify-center"><span class="text-xs font-bold text-red-600 uppercase mb-1">${article.category || 'Berita'}</span><h4 class="font-serif font-bold text-lg leading-tight group-hover:text-red-700 transition">${article.title}</h4><span class="text-xs text-slate-500 mt-2">${formatDateID(article.createdAt)}</span></div>
+      <div class="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden image-hover-zoom"><img src="${article.image || 'https://via.placeholder.com/100x100'}" class="w-full h-full object-cover" alt="${article.subCategory || article.category}"></div>
+      <div class="flex flex-col justify-center"><span class="text-xs font-bold text-red-600 uppercase mb-1">${article.subCategory || article.parentCategory || article.category || 'Berita'}</span><h4 class="font-serif font-bold text-lg leading-tight group-hover:text-red-700 transition">${article.title}</h4><span class="text-xs text-slate-500 mt-2">${formatDateID(article.createdAt)}</span></div>
     `;
     articleElement.addEventListener('click', () => { window.location.href = `article.html?id=${article.id}`; });
     container.appendChild(articleElement);
@@ -133,16 +133,16 @@ function renderLatestNews(articles) {
   }
   container.innerHTML = '';
   articles.forEach(article => {
-    const categoryColor = {
-      'Nasional': 'red', 'Ekonomi': 'blue', 'Teknologi': 'purple',
-      'Gaya Hidup': 'pink', 'Opini': 'amber', 'Olahraga': 'green',
-      'Internasional': 'indigo', 'Feature': 'amber', 'Cek Fakta': 'rose'
-    }[article.category] || 'gray';
+    const tag = article.subCategory || article.parentCategory || article.category || 'Berita';
     const articleElement = document.createElement('article');
     articleElement.className = 'bg-white rounded-lg shadow-sm hover:shadow-lg transition duration-300 overflow-hidden group cursor-pointer';
     articleElement.innerHTML = `
-      <div class="h-48 overflow-hidden"><img src="${article.image || 'https://via.placeholder.com/400x200'}" class="w-full h-full object-cover transform group-hover:scale-110 transition duration-500" alt="${article.category}"></div>
-      <div class="p-4"><span class="text-xs font-bold text-${categoryColor}-600 uppercase">${article.category || 'Berita'}</span><h4 class="font-serif font-bold text-lg mt-2 mb-2 leading-snug group-hover:text-red-700">${article.title}</h4><p class="text-slate-600 text-sm line-clamp-3">${article.description || ''}</p></div>
+      <div class="h-48 overflow-hidden"><img src="${article.image || 'https://via.placeholder.com/400x200'}" class="w-full h-full object-cover transform group-hover:scale-110 transition duration-500" alt="${tag}"></div>
+      <div class="p-4">
+        <span class="inline-block px-2 py-0.5 rounded bg-red-50 text-red-700 text-[10px] font-bold uppercase tracking-wider mb-2">${tag}</span>
+        <h4 class="font-serif font-bold text-lg mt-2 mb-2 leading-snug group-hover:text-red-700">${article.title}</h4>
+        <p class="text-slate-600 text-sm line-clamp-3">${article.description || ''}</p>
+      </div>
     `;
     articleElement.addEventListener('click', () => { window.location.href = `article.html?id=${article.id}`; });
     container.appendChild(articleElement);
@@ -161,9 +161,9 @@ window.navigateTo = function(page) {
 window.router = async function(page) {
   const container = document.getElementById('spa-container');
   if (!container) return;
-  
+
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  
+
   await renderView(page);
 };
 
@@ -248,40 +248,68 @@ async function renderHomePage(container) {
   await loadNewsData();
 }
 
-async function renderCategoryPage(category, container) {
+async function renderCategoryPage(routeName, container) {
   if (allArticles.length === 0) await loadNewsData();
-
+  
+  const normalizedRoute = routeName === 'cek-fakta' ? 'Cek Fakta' : 
+                          routeName.charAt(0).toUpperCase() + routeName.slice(1);
+  
   const filtered = allArticles.filter(a => 
-    a.category?.toLowerCase().replace(/\s+/g, '-') === category || 
-    a.category?.toLowerCase().includes(category)
+    a.parentCategory === normalizedRoute || a.category === normalizedRoute
   );
 
+  const subCats = [...new Set(filtered.map(a => a.subCategory).filter(Boolean))];
+
   container.innerHTML = `
-    <h2 class="font-serif text-3xl font-bold text-slate-800 mb-2 capitalize">${category.replace('-', ' ')}</h2>
-    <p class="text-slate-500 mb-8">Menampilkan arsip berita untuk kategori ini.</p>
+    <h2 class="font-serif text-3xl font-bold text-slate-800 mb-2 capitalize">${routeName.replace('-', ' ')}</h2>
+    <p class="text-slate-500 mb-4">Jelajahi artikel dalam kategori ini.</p>
+    <div id="category-filters" class="flex flex-wrap gap-2 mb-6">
+      <button class="filter-pill active px-3 py-1.5 rounded-full text-xs font-semibold bg-red-600 text-white transition" data-sub="all">Semua</button>
+      ${subCats.map(sc => `<button class="filter-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition" data-sub="${sc}">${sc}</button>`).join('')}
+    </div>
     <div id="category-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
   `;
 
-  const grid = document.getElementById('category-grid');
-  if (filtered.length === 0) {
-    grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500">Belum ada artikel untuk kategori ini.</div>`;
-    return;
+  function renderGridCards(subFilter = 'all') {
+    const grid = document.getElementById('category-grid');
+    grid.innerHTML = '';
+    const visible = subFilter === 'all' ? filtered : filtered.filter(a => a.subCategory === subFilter);
+    
+    if (visible.length === 0) {
+      grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500">Belum ada artikel untuk filter ini.</div>`;
+      return;
+    }
+    visible.forEach(article => {
+      const tag = article.subCategory || article.parentCategory || article.category || 'Berita';
+      const card = document.createElement('article');
+      card.className = 'bg-white rounded-lg shadow-sm hover:shadow-lg transition duration-300 overflow-hidden group cursor-pointer';
+      card.innerHTML = `
+        <div class="h-48 overflow-hidden"><img src="${article.image || 'https://via.placeholder.com/400x200'}" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500" alt="${tag}"></div>
+        <div class="p-4">
+          <span class="inline-block px-2 py-0.5 rounded bg-red-50 text-red-700 text-[10px] font-bold uppercase tracking-wider mb-2">${tag}</span>
+          <h4 class="font-serif font-bold text-lg leading-snug group-hover:text-red-700 line-clamp-2">${article.title}</h4>
+          <p class="text-slate-600 text-sm mt-2 line-clamp-3">${article.description || ''}</p>
+          <div class="mt-3 text-xs text-slate-400 flex items-center gap-2"><i data-lucide="clock" class="w-3 h-3"></i> ${formatDateID(article.createdAt)}</div>
+        </div>
+      `;
+      card.addEventListener('click', () => window.location.href = `article.html?id=${article.id}`);
+      grid.appendChild(card);
+    });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 
-  filtered.forEach(article => {
-    const card = document.createElement('article');
-    card.className = 'bg-white rounded-lg shadow-sm hover:shadow-lg transition duration-300 overflow-hidden group cursor-pointer';
-    card.innerHTML = `
-      <div class="h-48 overflow-hidden"><img src="${article.image || 'https://via.placeholder.com/400x200'}" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500" alt="${article.category}"></div>
-      <div class="p-4">
-        <span class="text-xs font-bold text-red-600 uppercase">${article.category || 'Berita'}</span>
-        <h4 class="font-serif font-bold text-lg mt-2 mb-2 leading-snug group-hover:text-red-700 line-clamp-2">${article.title}</h4>
-        <p class="text-slate-600 text-sm line-clamp-3">${article.description || ''}</p>
-        <div class="mt-3 text-xs text-slate-400">${formatDateID(article.createdAt)}</div>
-      </div>
-    `;
-    card.addEventListener('click', () => window.location.href = `article.html?id=${article.id}`);
-    grid.appendChild(card);
+  renderGridCards();
+
+  container.querySelectorAll('.filter-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      container.querySelectorAll('.filter-pill').forEach(b => {
+        b.classList.remove('active', 'bg-red-600', 'text-white');
+        b.classList.add('bg-slate-100', 'text-slate-600');
+      });
+      btn.classList.add('active', 'bg-red-600', 'text-white');
+      btn.classList.remove('bg-slate-100', 'text-slate-600');
+      renderGridCards(btn.dataset.sub);
+    });
   });
 }
 
@@ -362,7 +390,7 @@ function initSearchLogic() {
         const filtered = allArticles.filter(art => {
             const matchTitle = art.title?.toLowerCase().includes(keyword);
             const matchDesc = art.description?.toLowerCase().includes(keyword);
-            const matchCat = currentSearchCategory === 'all' || art.category === currentSearchCategory;
+            const matchCat = currentSearchCategory === 'all' || (art.parentCategory === currentSearchCategory || art.category === currentSearchCategory);
             return (matchTitle || matchDesc) && matchCat;
         });
 
@@ -380,7 +408,7 @@ function initSearchLogic() {
                      onerror="this.src='https://via.placeholder.com/64x64?text=No+Image'">
                 <div class="flex-1 min-w-0">
                     <h4 class="text-white font-medium text-sm group-hover:text-amber-400 transition line-clamp-2">${art.title}</h4>
-                    <span class="text-amber-400 text-[10px] uppercase font-bold tracking-wide">${art.category || 'Berita'}</span>
+                    <span class="text-amber-400 text-[10px] uppercase font-bold tracking-wide">${art.subCategory || art.parentCategory || art.category || 'Berita'}</span>
                     <p class="text-slate-400 text-xs mt-1 line-clamp-1">${art.description || ''}</p>
                 </div>
             </div>
