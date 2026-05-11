@@ -144,6 +144,12 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
+        body.page-transition {
+            transition: opacity 0.3s ease-in-out;
+        }
+        body.page-transition.opacity-0 {
+            opacity: 0;
+        }
     </style>
 </head>
 <body class="bg-stone-50 text-slate-800 flex flex-col min-h-screen">
@@ -238,7 +244,7 @@
     <div id="search-modal" class="fixed inset-0 bg-slate-900/95 z-[60] hidden flex-col p-6 md:p-20 transition-all duration-300 backdrop-blur-sm">
         <div class="max-w-4xl mx-auto w-full">
             <div class="flex justify-between items-center mb-8">
-                <h2 class="text-amber-400 font-serif text-xl font-bold">🔍 Pencarian Artikel</h2>
+                <h2 class="text-amber-400 font-serif text-xl font-bold">Pencarian Artikel</h2>
                 <button id="close-search" class="text-white hover:text-amber-400 transition p-2">
                     <i data-lucide="x" class="w-8 h-8"></i>
                 </button>
@@ -264,5 +270,19 @@
     <script type="module" src="./js/layout-loader.js"></script>
     <script type="module" src="./js/firebase-config.js"></script>
     <script type="module" src="./js/article-detail.js"></script>
+    <script>
+        window.addEventListener('beforeunload', () => {
+            const targetIsSPA = document.referrer?.includes('index.html') || 
+                                window.location.hash?.startsWith('#');
+            
+            if (targetIsSPA) {
+                document.body.classList.add('page-transition', 'opacity-0');
+            }
+        });
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            document.body.classList.remove('page-transition', 'opacity-0');
+        });
+    </script>
 </body>
 </html>
