@@ -14,6 +14,10 @@ function showToast(message, type = 'success') {
   setTimeout(() => toast.classList.add('translate-y-24'), 3000);
 }
 
+function shouldShowCategory(article) {
+  return !['Opini', 'Cek Fakta'].includes(article.type);
+}
+
 function renderArticleBadges(article) {
     const standaloneTypes = ['Opini', 'Cek Fakta'];
     const isStandalone = standaloneTypes.includes(article.type);
