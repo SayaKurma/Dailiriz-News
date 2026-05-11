@@ -16,7 +16,7 @@ export async function loadLayout() {
     if (typeof lucide !== 'undefined') lucide.createIcons();
     initLayoutLogic();
   } catch (err) {
-    console.error('❌ Layout Loader Error:', err);
+    console.error('Layout Loader Error:', err);
     document.getElementById('layout-header').innerHTML = '<div class="bg-red-50 text-red-600 p-4 text-center">Gagal memuat navigasi. Muat ulang halaman.</div>';
   }
 }
@@ -62,8 +62,33 @@ function initLayoutLogic() {
   if (!window.navigateTo) {
     window.navigateTo = (page) => {
       window.closeMobileMenu?.();
-      if (page === 'beranda') window.location.href = 'index.html';
-      else window.location.href = `index.html#${page}`;
+      
+      const validSPAPages = ['beranda', 'news', 'feature', 'opini', 'cek-fakta'];
+      
+      const isOnArticlePage = window.location.pathname.endsWith('article.html');
+      const isOnIndexPage = window.location.pathname.endsWith('index.html') || 
+                            window.location.pathname === '/' ||
+                            window.location.pathname === '';
+      
+      if (isOnArticlePage && validSPAPages.includes(page)) {
+        window.location.href = `index.html#${page}`;
+        
+      } else if (isOnIndexPage && validSPAPages.includes(page)) {
+        if (window.location.hash.replace('#', '') !== page) {
+          window.location.hash = page;
+        } else {
+          if (typeof window.router === 'function') {
+            window.router(page);
+          }
+        }
+        
+      } else {
+        if (page === 'beranda') {
+          window.location.href = 'index.html';
+        } else {
+          window.location.href = `index.html#${page}`;
+        }
+      }
     };
   }
 
