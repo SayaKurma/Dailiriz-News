@@ -340,6 +340,33 @@ function setupEventListeners() {
       urlSlugSpan.textContent = slug || 'judul-artikel';
     });
   }
+
+  const typeSelect = document.getElementById('article-type');
+  const categorySelect = document.getElementById('article-category');
+  const categoryWrapper = categorySelect?.closest('div');
+
+  function toggleCategoryByType() {
+      const standaloneTypes = ['Opini', 'Cek Fakta'];
+      const isStandalone = standaloneTypes.includes(typeSelect?.value);
+      
+      if (categorySelect) {
+          if (isStandalone) {
+              categorySelect.value = '';
+              categorySelect.disabled = true;
+              categorySelect.classList.add('bg-slate-100', 'cursor-not-allowed');
+              categoryWrapper?.classList.add('opacity-60', 'pointer-events-none');
+          } else {
+              categorySelect.disabled = false;
+              categorySelect.classList.remove('bg-slate-100', 'cursor-not-allowed');
+              categoryWrapper?.classList.remove('opacity-60', 'pointer-events-none');
+          }
+      }
+  }
+
+  if (typeSelect && categorySelect) {
+      toggleCategoryByType();
+      typeSelect.addEventListener('change', toggleCategoryByType);
+  }
 }
 
 async function filterArticles(filter) {
@@ -385,12 +412,15 @@ async function handleSaveArticle() {
   try {
     const finalAuthor = authorInput || currentUser?.email?.split('@')[0] || 'Admin';
 
+    const isStandaloneType = ['Opini', 'Cek Fakta'].includes(type);
+    const sanitizedCategory = isStandaloneType ? '' : (category || '');
+
     const articleData = {
       title,
       content: cleanContent,
       description,
       type,
-      category,
+      category: sanitizedCategory,
       status,
       image,
       imageCaption,
