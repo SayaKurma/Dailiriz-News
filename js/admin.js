@@ -105,7 +105,8 @@ async function loadDashboardStats() {
 function getArticleDisplayData(article) {
   return {
     title: escapeHtml(article.title),
-    category: escapeHtml(article.subCategory || article.parentCategory || article.category || 'Umum'),
+    type: escapeHtml(article.type || 'News'),
+    category: escapeHtml(article.category || 'Umum'),
     author: escapeHtml(article.author || 'Admin'),
     date: formatDateID(article.createdAt),
     views: (article.views || 0).toLocaleString('id-ID'),
@@ -124,7 +125,12 @@ function createArticleRow(article) {
       <p class="font-semibold text-slate-800 truncate max-w-[200px] md:max-w-xs" title="${d.title}">${d.title}</p>
       <p class="text-xs text-slate-400 mt-1">${d.views} tayangan</p>
     </td>
-    <td class="px-4 md:px-6 py-3 md:py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700">${d.category}</span></td>
+    <td class="px-4 md:px-6 py-3 md:py-4">
+      <div class="flex flex-wrap gap-1">
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-red-50 text-red-700 border border-red-100">${d.type}</span>
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">${d.category}</span>
+      </div>
+    </td>
     <td class="px-4 md:px-6 py-3 md:py-4 text-sm text-slate-600">${d.author}</td>
     <td class="px-4 md:px-6 py-3 md:py-4 text-sm text-slate-500">${d.date}</td>
     <td class="px-4 md:px-6 py-3 md:py-4"><span class="status-badge ${d.statusClass}">${d.statusText}</span></td>
@@ -139,7 +145,7 @@ function createArticleMobileCard(article) {
   div.className = 'table-card-mobile';
   div.innerHTML = `
     <div class="table-card-header"><div class="flex justify-between items-start"><h4 class="font-semibold text-slate-800 text-sm truncate flex-1 pr-2" title="${d.title}">${d.title}</h4><span class="status-badge ${d.statusClass} flex-shrink-0">${d.statusText}</span></div></div>
-    <div class="table-card-body"><div class="table-card-row"><span class="table-card-label">Kategori</span><span class="table-card-value">${d.category}</span></div><div class="table-card-row"><span class="table-card-label">Penulis</span><span class="table-card-value">${d.author}</span></div><div class="table-card-row"><span class="table-card-label">Tanggal</span><span class="table-card-value">${d.date}</span></div><div class="table-card-row"><span class="table-card-label">Tayangan</span><span class="table-card-value">${d.views}</span></div><div class="pt-3 flex justify-between"><button class="flex-1 mr-2 bg-slate-100 text-slate-700 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1 edit-article-btn" data-id="${article.id}"><i data-lucide="edit" class="w-3 h-3"></i> Edit</button><button class="flex-1 ml-2 bg-red-50 text-red-600 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1 delete-article-btn" data-id="${article.id}"><i data-lucide="trash-2" class="w-3 h-3"></i> Hapus</button></div></div>
+    <div class="table-card-body"><div class="table-card-row"><span class="table-card-label">Jenis</span><span class="table-card-value">${d.type}</span></div><div class="table-card-row"><span class="table-card-label">Kategori</span><span class="table-card-value">${d.category}</span></div><div class="table-card-row"><span class="table-card-label">Penulis</span><span class="table-card-value">${d.author}</span></div><div class="table-card-row"><span class="table-card-label">Tanggal</span><span class="table-card-value">${d.date}</span></div><div class="table-card-row"><span class="table-card-label">Tayangan</span><span class="table-card-value">${d.views}</span></div><div class="pt-3 flex justify-between"><button class="flex-1 mr-2 bg-slate-100 text-slate-700 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1 edit-article-btn" data-id="${article.id}"><i data-lucide="edit" class="w-3 h-3"></i> Edit</button><button class="flex-1 ml-2 bg-red-50 text-red-600 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1 delete-article-btn" data-id="${article.id}"><i data-lucide="trash-2" class="w-3 h-3"></i> Hapus</button></div></div>
   `;
   return div;
 }
@@ -208,7 +214,7 @@ async function loadModerationList() {
         <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">${escapeHtml(article.category || 'Umum')}</span></td>
         <td class="px-6 py-4 text-sm text-slate-500">${formatDateID(article.createdAt)}</td>
         <td class="px-6 py-4 text-center"><button class="px-3 py-1.5 bg-red-50 text-red-600 rounded hover:bg-red-100 text-sm font-medium transition-colors review-article-btn" data-id="${article.id}">Tinjau</button></td>
-       </tr>
+      </tr>
     `).join('');
     if (mobileContainer) {
       mobileContainer.innerHTML = pendingArticles.map(article => `
@@ -255,16 +261,6 @@ function setupEventListeners() {
     if (reviewBtn) { const id = reviewBtn.dataset.id; await showModerationDetail(id); }
   });
 
-  const parentCatEl = document.getElementById('parent-category');
-  const subWrapper = document.getElementById('sub-category-wrapper');
-  if (parentCatEl && subWrapper) {
-    parentCatEl.addEventListener('change', (e) => {
-      const show = ['News', 'Feature'].includes(e.target.value);
-      subWrapper.classList.toggle('hidden', !show);
-      if (!show) document.getElementById('sub-category').value = '';
-    });
-  }
-
   const createBtn = document.getElementById('create-new-article-btn');
   if (createBtn) createBtn.addEventListener('click', () => { 
     currentEditId = null; 
@@ -274,11 +270,11 @@ function setupEventListeners() {
     document.getElementById('article-title').value = ''; 
     document.getElementById('article-content').value = ''; 
     document.getElementById('article-status').value = 'draft'; 
+    document.getElementById('article-type').value = 'News';
+    document.getElementById('article-category').value = 'Nasional';
     document.getElementById('form-title').textContent = 'Tulis Artikel Baru'; 
     document.getElementById('submit-btn-text').textContent = 'Terbitkan';
     document.getElementById('article-preview-panel')?.classList.add('hidden');
-    const subWrapper = document.getElementById('sub-category-wrapper');
-    if (subWrapper) subWrapper.classList.add('hidden');
     requestAnimationFrame(() => {
         setTimeout(() => {
             if (typeof window.initTinyMCE === 'function') {
@@ -374,8 +370,8 @@ async function handleSaveArticle() {
         ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'style']
       })
     : rawContent;
-  const parentCategory = document.getElementById('parent-category')?.value;
-  const subCategory = document.getElementById('sub-category')?.value.trim();
+  const type = document.getElementById('article-type')?.value || 'News';
+  const category = document.getElementById('article-category')?.value;
   const status = document.getElementById('article-status')?.value || 'draft';
   const image = document.getElementById('article-image-url')?.value.trim() || 'https://via.placeholder.com/800x400';
   const imageCaption = document.getElementById('article-image-caption')?.value.trim() || '';
@@ -384,7 +380,7 @@ async function handleSaveArticle() {
   const imageSourceInput = document.getElementById('input-image-source')?.value.trim();
 
   const description = cleanContent?.substring(0, 200).replace(/<[^>]*>/g, '') || '';
-  if (!title || !cleanContent || !parentCategory) { showToast('Judul, konten, dan kategori utama wajib diisi', 'error'); return; }
+  if (!title || !cleanContent || !category) { showToast('Judul, konten, dan kategori wajib diisi', 'error'); return; }
 
   try {
     const finalAuthor = authorInput || currentUser?.email?.split('@')[0] || 'Admin';
@@ -393,9 +389,8 @@ async function handleSaveArticle() {
       title,
       content: cleanContent,
       description,
-      category: parentCategory,
-      parentCategory,
-      subCategory: subCategory || null,
+      type,
+      category,
       status,
       image,
       imageCaption,
@@ -437,19 +432,12 @@ async function handleEditArticle(id) {
       document.getElementById('article-title').value = article.title || '';
       document.getElementById('article-content').value = article.content || '';
       document.getElementById('article-status').value = article.status || 'draft';
+      document.getElementById('article-type').value = article.type || 'News';
+      document.getElementById('article-category').value = article.category || 'Nasional';
       document.getElementById('article-image-url').value = article.image || '';
       document.getElementById('article-image-caption').value = article.imageCaption || '';
       document.getElementById('input-author').value = article.author || '';
       document.getElementById('input-image-source').value = article.imageSource || '';
-      const parentCatEl = document.getElementById('parent-category');
-      const subCatEl = document.getElementById('sub-category');
-      const subWrapper = document.getElementById('sub-category-wrapper');
-      if (parentCatEl) parentCatEl.value = article.parentCategory || article.category || '';
-      if (subCatEl && subWrapper) {
-        const shouldShow = ['News', 'Feature'].includes(article.category || article.parentCategory);
-        subWrapper.classList.toggle('hidden', !shouldShow);
-        if (shouldShow) subCatEl.value = article.subCategory || '';
-      }
       document.getElementById('form-title').textContent = 'Edit Artikel';
       document.getElementById('submit-btn-text').textContent = 'Perbarui';
       document.getElementById('article-list-view').classList.add('hidden');
